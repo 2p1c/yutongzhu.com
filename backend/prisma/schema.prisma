@@ -1,0 +1,19 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Post {
+  id        Int      @id @default(autoincrement()) // 博文唯一ID
+  title     String                                 // 标题
+  content   String                                 // 文章内容（Markdown或纯文本）
+  createdAt DateTime @default(now())               // 创建时间
+}
