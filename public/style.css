@@ -73,12 +73,11 @@ h2 {
 .post-title-link {
   color: #0066cc;
   text-decoration: none;
-  font-size: inherit;
+  font-size: 1.5rem;
   font-weight: normal;
 }
 
 .post-title-link:hover {
-  text-decoration: underline;
 }
 
 /* 自我介绍部分的样式 */
