@@ -21,7 +21,7 @@ export function renderLayout(props: LayoutProps) {
   <header>
     <h1><a href="/" style="color: inherit; text-decoration: none;">{ Yutong Zhu }</a></h1>
     <span class="subtitle">developer • student • robot</span>
-    <img src="/public/images/home.jpg" alt="photo" class="home-photo" width="150" height="130" />
+    <img src="/public/images/home.jpg" alt="photo" class="home-photo" width="150" height="130" fetchpriority="high" />
   </header>
   ${props.content}
 </body>
