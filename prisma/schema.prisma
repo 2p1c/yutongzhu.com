@@ -14,6 +14,7 @@ datasource db {
 model Post {
   id        Int      @id @default(autoincrement()) // 博文唯一ID
   title     String                                 // 标题
+  slug      String   @unique                       // URL 友好标识符
   content   String                                 // 文章内容（Markdown或纯文本）
   createdAt DateTime @default(now())               // 创建时间
 }

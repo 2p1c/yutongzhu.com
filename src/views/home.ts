@@ -2,7 +2,7 @@
 import { html } from 'hono/html'
 
 interface PostListItem {
-  id: number
+  slug: string
   title: string
   createdAt: Date
 }
@@ -18,8 +18,10 @@ export function renderHomeBody(posts: PostListItem[]): string {
             const dateStr = new Date(post.createdAt).toISOString().split('T')[0]
             return html`
                 <li class="post-item">
-                <span class="post-date">${dateStr}</span>
-                <a class="post-title-link" href="/posts/${post.id}">${post.title}</a>
+                <a class="post-title-link" href="/posts/${post.slug}">
+                  <span class="post-date">${dateStr}</span>
+                  ${post.title}
+                </a>
                 </li>
             `
             })

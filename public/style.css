@@ -2,6 +2,10 @@
   box-sizing: border-box;
 }
 
+html {
+  -webkit-font-smoothing: antialiased;
+}
+
 body {
   /* 标志性的等宽与无衬线系统字体组合 */
   font: normal 1.21em KaTeX_Main, Times New Roman, serif;
@@ -52,35 +56,32 @@ h2 {
 }
 
 .post-item {
-  display: flex;
   margin-bottom: 14px;
-  align-items: baseline;
 }
 
 /* 日期：灰色、固定宽度、数字等宽对齐 */
 .post-date {
-  font-size: 0.875rem;
+  font-size: 15px;
   line-height: 1.25rem;
-  color: #888888;
-  width: 110px;
+  color: #777;
+  width: 83px;
   flex-shrink: 0;
   font-variant-numeric: tabular-nums;
   font-style: italic;
   font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
 }
 
-/* 链接：经典克制蓝色，字号同正文，默认无下划线，悬停出现 */
+/* 链接：经典克制蓝色，整行点击 */
 .post-title-link {
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
   color: #0066cc;
   text-decoration: none;
   font-size: 18px;
   font-weight: normal;
   line-height: 1.5;
   font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
-  -webkit-font-smoothing: antialiased;
-}
-
-.post-title-link:hover {
 }
 
 /* 自我介绍部分的样式 */

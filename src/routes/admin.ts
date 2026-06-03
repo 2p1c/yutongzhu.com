@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { prisma } from '../lib/prisma'
 import { setAuthCookie, isAuthenticated, authGuard } from '../lib/auth'
+import { generateSlug } from '../lib/slug'
 import { renderLayout } from '../views/layout'
 import { renderLoginForm, renderPublishForm } from '../views/admin'
 
@@ -39,10 +40,12 @@ admin.post('/admin/posts', authGuard, async (c) => {
   const body = await c.req.parseBody()
   const title = body.title as string
   const content = body.content as string
-  const post = await prisma.post.create({
-    data: { title, content }
+  const now = new Date()
+  const slug = generateSlug(title, now)
+  await prisma.post.create({
+    data: { title, content, slug, createdAt: now }
   })
-  return c.redirect(`/posts/${post.id}`)
+  return c.redirect(`/posts/${slug}`)
 })
 
 export default admin
