@@ -73,8 +73,9 @@ h2 {
 .post-title-link {
   color: #0066cc;
   text-decoration: none;
-  font-size: 1.5rem;
+  font-size: 18px;
   font-weight: normal;
+  line-height: 1.5;
 }
 
 .post-title-link:hover {
