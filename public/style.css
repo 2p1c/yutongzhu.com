@@ -76,6 +76,7 @@ h2 {
   font-size: 18px;
   font-weight: normal;
   line-height: 1.5;
+  font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
 }
 
 .post-title-link:hover {
