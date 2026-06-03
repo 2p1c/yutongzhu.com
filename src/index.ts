@@ -9,6 +9,7 @@ import admin from './routes/admin'
 const app = new Hono()
 
 app.use('/public/*', serveStatic({ root: './' }))
+app.get('/favicon.ico', (c) => c.redirect('/public/favicon.png'))
 
 app.route('/', home)
 app.route('/', posts)
