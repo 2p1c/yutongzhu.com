@@ -20,7 +20,7 @@ body {
 }
 
 header {
-  margin-bottom: 40px;
+  margin-bottom: 0px;
 }
 
 h1, h2 {
@@ -44,7 +44,8 @@ header h1 {
 .home-photo {
   width: 600px;
   height: 150px;
-  margin-top: 20px;
+  margin-top: 18px;
+  margin-bottom:0px;
   display: block;
 }
 
@@ -77,6 +78,18 @@ h2 {
   font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
 }
 
+.post-date-blog {
+  font-size: 13.5px;
+  line-height: 1.25rem;
+  color: #777;
+  width: 83px;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  font-style: italic;
+  font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  margin-bottom:20px;
+}
+
 .post-title-link {
   display: flex;
   align-items: baseline;
@@ -99,9 +112,10 @@ h2 {
 }
 
 .post-title {
-  font-size: 1.8rem;
+  font-size: 33.75px;
   font-weight: 800;
-  margin: 0 0 4px 0;
+  margin: 0 0 13px 0;
+  margin-top: 18px;
 }
 
 .post-content {
