@@ -179,9 +179,55 @@ h2 {
   margin-top: 40px;
 }
 
-/* ── Admin forms ── */
+/* ── Admin ── */
 .admin {
   margin-top: 0;
+}
+
+.admin-post-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.admin-post-item {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.admin-post-date {
+  font-size: 0.875rem;
+  color: #888;
+  flex-shrink: 0;
+}
+
+.admin-post-title {
+  color: #0066cc;
+  text-decoration: none;
+  flex: 1;
+}
+
+.admin-post-title:hover {
+  text-decoration: underline;
+}
+
+.admin-post-edit {
+  color: #888;
+  text-decoration: none;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
+.admin-post-edit:hover {
+  color: #0066cc;
+}
+
+.admin-empty {
+  color: #888;
+  font-style: italic;
+  margin-bottom: 12px;
 }
 
 .admin-error {
