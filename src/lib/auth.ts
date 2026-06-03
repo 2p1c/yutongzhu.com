@@ -1,11 +1,10 @@
 import type { Context, Next } from 'hono'
-import { getSignedCookie, setSignedCookie, deleteCookie } from 'hono/cookie'
+import { getCookie, setCookie, deleteCookie } from 'hono/cookie'
 
 const COOKIE_NAME = 'admin_session'
-const COOKIE_SECRET = process.env.COOKIE_SECRET || 'change-me-in-production'
 
 export function setAuthCookie(c: Context): void {
-  setSignedCookie(c, COOKIE_NAME, 'true', COOKIE_SECRET, {
+  setCookie(c, COOKIE_NAME, 'true', {
     httpOnly: true,
     path: '/',
     maxAge: 60 * 60 * 24,
@@ -18,7 +17,7 @@ export function clearAuthCookie(c: Context): void {
 }
 
 export function isAuthenticated(c: Context): boolean {
-  const cookie = getSignedCookie(c, COOKIE_SECRET, COOKIE_NAME)
+  const cookie = getCookie(c, COOKIE_NAME)
   return cookie === 'true'
 }
 
