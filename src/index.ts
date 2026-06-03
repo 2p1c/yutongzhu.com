@@ -2,9 +2,9 @@ import 'dotenv/config'
 import { serve } from '@hono/node-server'
 import { serveStatic } from '@hono/node-server/serve-static'
 import { Hono } from 'hono'
-import home from './routes/home'
-import posts from './routes/posts'
-import admin from './routes/admin'
+import home from './routes/home.js'
+import posts from './routes/posts.js'
+import admin from './routes/admin.js'
 
 const app = new Hono()
 

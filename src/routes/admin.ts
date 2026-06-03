@@ -1,9 +1,9 @@
 import { Hono } from 'hono'
-import { prisma } from '../lib/prisma'
-import { setAuthCookie, isAuthenticated, authGuard } from '../lib/auth'
-import { generateSlug } from '../lib/slug'
-import { renderLayout } from '../views/layout'
-import { renderLoginForm, renderPublishForm } from '../views/admin'
+import { prisma } from '../lib/prisma.js'
+import { setAuthCookie, isAuthenticated, authGuard } from '../lib/auth.js'
+import { generateSlug } from '../lib/slug.js'
+import { renderLayout } from '../views/layout.js'
+import { renderLoginForm, renderPublishForm } from '../views/admin.js'
 
 const admin = new Hono()
 

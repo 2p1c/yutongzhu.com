@@ -1,9 +1,9 @@
 import { Hono } from 'hono'
-import { prisma } from '../lib/prisma'
-import { renderMarkdown } from '../lib/markdown'
-import { generateSlug } from '../lib/slug'
-import { renderLayout } from '../views/layout'
-import { renderPostBody } from '../views/post'
+import { prisma } from '../lib/prisma.js'
+import { renderMarkdown } from '../lib/markdown.js'
+import { generateSlug } from '../lib/slug.js'
+import { renderLayout } from '../views/layout.js'
+import { renderPostBody } from '../views/post.js'
 
 const posts = new Hono()
 

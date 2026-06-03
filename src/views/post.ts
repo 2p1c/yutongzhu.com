@@ -6,7 +6,7 @@ interface PostViewProps {
   createdAt: Date
 }
 
-export function renderPostBody(props: PostViewProps): string {
+export function renderPostBody(props: PostViewProps) {
   const dateStr = new Date(props.createdAt).toISOString().split('T')[0]
   return html`<article class="post">
     <h1 class="post-title">${props.title}</h1>

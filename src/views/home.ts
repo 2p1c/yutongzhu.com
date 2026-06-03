@@ -7,7 +7,7 @@ interface PostListItem {
   createdAt: Date
 }
 
-export function renderHomeBody(posts: PostListItem[]): string {
+export function renderHomeBody(posts: PostListItem[]) {
   return html`<section>
     <h2>Musings</h2>
     <ul class="post-list">

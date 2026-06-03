@@ -2,10 +2,11 @@ import { html } from 'hono/html'
 
 interface LayoutProps {
   title: string
-  content: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  content: any
 }
 
-export function renderLayout(props: LayoutProps): string {
+export function renderLayout(props: LayoutProps) {
   return html`<!DOCTYPE html>
 <html lang="zh-CN">
 <head>

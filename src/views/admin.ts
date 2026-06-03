@@ -1,6 +1,6 @@
 import { html } from 'hono/html'
 
-export function renderLoginForm(error?: string): string {
+export function renderLoginForm(error?: string) {
   return html`<section class="admin">
     <h2>Login</h2>
     ${error ? html`<p class="admin-error">${error}</p>` : ''}
@@ -17,7 +17,7 @@ export function renderLoginForm(error?: string): string {
   </section>`
 }
 
-export function renderPublishForm(): string {
+export function renderPublishForm() {
   return html`<section class="admin">
     <h2>New Post</h2>
     <form method="POST" action="/admin/posts">

@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
-import { prisma } from '../lib/prisma'
-import { renderLayout } from '../views/layout'
-import { renderHomeBody } from '../views/home'
+import { prisma } from '../lib/prisma.js'
+import { renderLayout } from '../views/layout.js'
+import { renderHomeBody } from '../views/home.js'
 
 const home = new Hono()
 
