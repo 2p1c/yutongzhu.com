@@ -14,6 +14,7 @@ export function renderLayout(props: LayoutProps) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/ico" href="/public/images/favicon.ico" />
   <title>${props.title}</title>
+  <link rel="preload" as="image" href="/public/images/home.jpg" />
   <link rel="stylesheet" href="/public/style.css">
 </head>
 <body>
