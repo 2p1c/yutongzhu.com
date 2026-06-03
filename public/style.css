@@ -180,11 +180,7 @@ h2 {
 
 /* ── Admin forms ── */
 .admin {
-  margin-top: 20px;
-}
-
-.admin h2 {
-  margin-top: 20px;
+  margin-top: 0;
 }
 
 .admin-error {
