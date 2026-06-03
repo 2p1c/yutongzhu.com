@@ -1,5 +1,5 @@
 {
-  "name": "backend",
+  "name": "yutongzhu.com",
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
