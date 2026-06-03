@@ -54,7 +54,7 @@ h2 {
 .post-item {
   display: flex;
   margin-bottom: 14px;
-  align-items: flex-start;
+  align-items: baseline;
 }
 
 /* 日期：灰色、固定宽度、数字等宽对齐 */
@@ -69,10 +69,12 @@ h2 {
   font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
 }
 
-/* 链接：经典的克制蓝色，默认无下划线，悬停出现 */
+/* 链接：经典克制蓝色，字号同正文，默认无下划线，悬停出现 */
 .post-title-link {
   color: #0066cc;
   text-decoration: none;
+  font-size: inherit;
+  font-weight: normal;
 }
 
 .post-title-link:hover {
