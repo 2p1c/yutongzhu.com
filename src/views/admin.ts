@@ -1,22 +1,5 @@
 import { html } from 'hono/html'
 
-export function renderLoginForm(error?: string) {
-  return html`<section class="admin">
-    <h2>Login</h2>
-    ${error ? html`<p class="admin-error">${error}</p>` : ''}
-    <form method="POST" action="/admin/login">
-      <input
-        type="password"
-        name="password"
-        placeholder="Password"
-        class="admin-input"
-        autofocus
-      />
-      <button type="submit" class="admin-btn">Login</button>
-    </form>
-  </section>`
-}
-
 export function renderPublishForm() {
   return html`<section class="admin">
     <h2>New Post</h2>

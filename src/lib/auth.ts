@@ -1,29 +1,25 @@
 import type { Context, Next } from 'hono'
-import { getCookie, setCookie, deleteCookie } from 'hono/cookie'
 
-const COOKIE_NAME = 'admin_session'
+const AUTH_REALM = 'Admin'
 
-export function setAuthCookie(c: Context): void {
-  setCookie(c, COOKIE_NAME, 'true', {
-    httpOnly: true,
-    path: '/',
-    maxAge: 60 * 60 * 24,
-    sameSite: 'lax',
-  })
+export function checkBasicAuth(c: Context): boolean {
+  const auth = c.req.header('Authorization')
+  if (!auth || !auth.startsWith('Basic ')) {
+    return false
+  }
+  const decoded = atob(auth.slice(6))
+  const [user, pass] = decoded.split(':')
+  return user === process.env.ADMIN_USERNAME && pass === process.env.ADMIN_PASSWORD
 }
 
-export function clearAuthCookie(c: Context): void {
-  deleteCookie(c, COOKIE_NAME, { path: '/' })
-}
-
-export function isAuthenticated(c: Context): boolean {
-  const cookie = getCookie(c, COOKIE_NAME)
-  return cookie === 'true'
+function unauthorized(c: Context): Response {
+  c.header('WWW-Authenticate', `Basic realm="${AUTH_REALM}"`)
+  return c.text('Unauthorized', 401)
 }
 
 export async function authGuard(c: Context, next: Next): Promise<Response | void> {
-  if (!isAuthenticated(c)) {
-    return c.redirect('/admin?error=unauthorized')
+  if (!checkBasicAuth(c)) {
+    return unauthorized(c)
   }
   await next()
 }
