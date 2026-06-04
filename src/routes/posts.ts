@@ -1,15 +1,13 @@
 import { Hono } from 'hono'
-import { prisma } from '../lib/prisma.js'
+import { getAllPosts, getPostBySlug, createPost } from '../lib/post-storage.js'
 import { renderMarkdown } from '../lib/markdown.js'
-import { generateSlug } from '../lib/slug.js'
 import { renderLayout } from '../views/layout.js'
 import { renderPostBody } from '../views/post.js'
 
 const posts = new Hono()
 
-posts.get('/posts/:slug', async (c) => {
-  const slug = c.req.param('slug')
-  const post = await prisma.post.findUnique({ where: { slug } })
+async function servePost(c: any, slug: string) {
+  const post = await getPostBySlug(slug)
   if (!post) {
     return c.notFound()
   }
@@ -22,27 +20,26 @@ posts.get('/posts/:slug', async (c) => {
       createdAt: post.createdAt
     })
   }))
+}
+
+posts.get('/posts/:slug', async (c) => {
+  const slug = c.req.param('slug')
+  return servePost(c, slug)
+})
+
+posts.get('/posts/:slug/', async (c) => {
+  const slug = c.req.param('slug')
+  return servePost(c, slug)
 })
 
 posts.get('/api/posts', async (c) => {
-  const posts = await prisma.post.findMany({
-    orderBy: { createdAt: 'desc' }
-  })
-  return c.json(posts)
+  const allPosts = await getAllPosts()
+  return c.json(allPosts)
 })
 
 posts.post('/api/posts', async (c) => {
   const body = await c.req.json()
-  const now = new Date()
-  const slug = generateSlug(body.title, now)
-  const newPost = await prisma.post.create({
-    data: {
-      title: body.title,
-      content: body.content,
-      slug,
-      createdAt: now
-    }
-  })
+  const newPost = await createPost(body.title, body.content)
   return c.json(newPost, 201)
 })
 

@@ -12,9 +12,9 @@ export function renderLayout(props: LayoutProps) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" type="image/ico" href="/public/images/favicon.ico" />
+  <link rel="icon" type="image/ico" href="/images/favicon.ico" />
   <title>${props.title}</title>
-  <link rel="stylesheet" href="/public/style.css">
+  <link rel="stylesheet" href="/style.css">
 </head>
 <body>
   <header>

@@ -3,3 +3,5 @@ dist
 .env
 .worktrees
 .DS_Store
+public/index.html
+public/posts/

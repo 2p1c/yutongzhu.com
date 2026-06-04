@@ -18,7 +18,7 @@ export function renderHomeBody(posts: PostListItem[]) {
             const dateStr = new Date(post.createdAt).toISOString().split('T')[0]
             return html`
                 <li class="post-item">
-                <a class="post-title-link" href="/posts/${post.slug}">
+                <a class="post-title-link" href="/posts/${post.slug}/">
                   <span class="post-date">${dateStr}</span>
                   ${post.title}
                 </a>
@@ -37,8 +37,8 @@ export function renderHomeBody(posts: PostListItem[]) {
 
   <section>
     <h2>Get in touch</h2>
-    <p class="get-in-touch" style="color: #444;">Email: <a href="mailto:ytzhu@tju.edu.cn" class="get-in-touch-link">akidforseven@gmail.com</a></p>
-    <p class="get-in-touch" style="color: #444;">Github: <a href="https://github.com/2p1c" class="get-in-touch-link">2p1c</a></p>
-    <p class="get-in-touch" style="color: #444;">Phone: <a href="tek:+8618617715681" class="get-in-touch-link">18617715681</a></p>
+    <p class="get-in-touch" style="color: #444;">email: <a href="mailto:ytzhu@tju.edu.cn" class="get-in-touch-link">akidforseven@gmail.com</a></p>
+    <p class="get-in-touch" style="color: #444;">github: <a href="https://github.com/2p1c" class="get-in-touch-link">2p1c</a></p>
+    <p class="get-in-touch" style="color: #444;">phone: <a href="tek:+8618617715681" class="get-in-touch-link">18617715681</a></p>
   </section>`
 }

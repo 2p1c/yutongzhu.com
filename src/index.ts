@@ -8,8 +8,12 @@ import admin from './routes/admin.js'
 
 const app = new Hono()
 
-app.use('/public/*', serveStatic({ root: './' }))
-app.get('/favicon.ico', (c) => c.redirect('/public/favicon.png'))
+// Serve static assets — must be before routes
+app.use('/style.css', serveStatic({ root: './public' }))
+app.use('/images/*', serveStatic({ root: './public' }))
+app.use('/favicon.png', serveStatic({ root: './public' }))
+// Serve post media files from src/posts/<slug>/media/
+app.use('/posts/*', serveStatic({ root: './src' }))
 
 app.route('/', home)
 app.route('/', posts)
