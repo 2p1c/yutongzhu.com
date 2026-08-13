@@ -27,9 +27,12 @@ async function buildPosts(): Promise<void> {
     if (!post) continue
 
     const contentHtml = renderMarkdown(post.content)
+    const contentHtmlZh = post.contentZh ? renderMarkdown(post.contentZh) : undefined
     const body = renderPostBody({
       title: post.title,
+      titleZh: post.titleZh,
       contentHtml,
+      contentHtmlZh,
       createdAt: post.createdAt,
     })
     const html = renderLayout({ title: post.title, content: body })

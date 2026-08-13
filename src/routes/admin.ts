@@ -13,6 +13,7 @@ admin.get('/admin', authGuard, async (c) => {
   const error = c.req.query('error') ?? undefined
   return c.html(renderLayout({
     title: 'Admin',
+    showTranslate: false,
     content: renderAdminPage(posts, token, mediaFiles, error),
   }))
 })
@@ -25,6 +26,7 @@ admin.get('/admin/edit/:slug', authGuard, async (c) => {
   const error = c.req.query('error') ?? undefined
   return c.html(renderLayout({
     title: 'Edit — Admin',
+    showTranslate: false,
     content: renderEditForm(post, mediaFiles, error),
   }))
 })

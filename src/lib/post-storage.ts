@@ -21,6 +21,7 @@ const MAX_FILE_SIZE = 50 * 1024 * 1024 // 50 MB
 
 export interface PostMeta {
   title: string
+  titleZh?: string
   date: string
   description?: string
   published: boolean
@@ -29,7 +30,9 @@ export interface PostMeta {
 export interface Post {
   slug: string
   title: string
+  titleZh?: string
   content: string
+  contentZh?: string
   createdAt: Date
   description?: string
   published: boolean
@@ -38,6 +41,7 @@ export interface Post {
 export interface PostListItem {
   slug: string
   title: string
+  titleZh?: string
   createdAt: Date
 }
 
@@ -57,11 +61,13 @@ function parseMeta(raw: string, slug: string): PostMeta {
   return meta
 }
 
-function postFromDir(slug: string, meta: PostMeta, content: string): Post {
+function postFromDir(slug: string, meta: PostMeta, content: string, contentZh?: string): Post {
   return {
     slug,
     title: meta.title,
+    titleZh: meta.titleZh,
     content,
+    contentZh,
     createdAt: new Date(meta.date),
     description: meta.description,
     published: meta.published,
@@ -72,6 +78,7 @@ function postListItemFromDir(slug: string, meta: PostMeta): PostListItem {
   return {
     slug,
     title: meta.title,
+    titleZh: meta.titleZh,
     createdAt: new Date(meta.date),
   }
 }
@@ -135,7 +142,13 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
     const metaRaw = await readFile(join(POSTS_DIR, slug, 'meta.json'), 'utf-8')
     const meta = parseMeta(metaRaw, slug)
     const content = await readFile(join(POSTS_DIR, slug, 'index.md'), 'utf-8')
-    return postFromDir(slug, meta, content)
+    let contentZh: string | undefined
+    try {
+      contentZh = await readFile(join(POSTS_DIR, slug, 'index.zh.md'), 'utf-8')
+    } catch {
+      contentZh = undefined
+    }
+    return postFromDir(slug, meta, content, contentZh)
   } catch {
     return null
   }
@@ -182,6 +195,7 @@ export async function updatePost(
 
   const meta: PostMeta = {
     title,
+    titleZh: existing.titleZh,
     date: existing.createdAt.toISOString().split('T')[0],
     description: existing.description ?? '',
     published: existing.published,
