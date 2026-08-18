@@ -132,7 +132,7 @@ h2 {
   font-weight: 800;
   padding-bottom: 0px;
   margin-top: 25px;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
 }
 
 .post-list {
@@ -142,7 +142,7 @@ h2 {
 }
 
 .post-item {
-  margin-bottom: 14px;
+  margin-bottom: 18px;
 }
 
 .post-date {
@@ -183,6 +183,37 @@ h2 {
 .bio p {
   margin-bottom: 16px;
   color: var(--text-color);
+}
+
+.bio-title-text {
+  position: relative;
+  display: inline-block;
+  padding-right: 15px;
+}
+
+.bio-title-link {
+  position: absolute;
+  top: 2px;
+  right: -2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-color);
+  text-decoration: none;
+  opacity: 0.55;
+  border-radius: 4px;
+  transition: opacity 0.15s ease;
+}
+
+.bio-title-link:hover {
+  opacity: 1;
+}
+
+.bio-title-link svg {
+  width: 14px;
+  height: 14px;
+  display: block;
+  transform: rotate(11deg);
 }
 
 .post {

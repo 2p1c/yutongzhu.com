@@ -7,12 +7,7 @@ interface PostItem {
   createdAt: Date
 }
 
-export function renderAdminPage(
-  posts: PostItem[],
-  uploadToken?: string,
-  tempMediaFiles: MediaFile[] = [],
-  mediaError?: string,
-) {
+export function renderAdminPage(posts: PostItem[], error?: string) {
   return html`<section class="admin">
     <h2>Posts</h2>
     ${posts.length === 0
@@ -29,9 +24,10 @@ export function renderAdminPage(
         </ul>`
     }
 
+    ${error ? html`<p class="admin-media-error">${error}</p>` : ''}
+
     <h2>New Post</h2>
-    <form method="POST" action="/admin/posts">
-      ${uploadToken ? html`<input type="hidden" name="upload_token" value="${uploadToken}" />` : ''}
+    <form method="POST" action="/admin/posts" enctype="multipart/form-data">
       <input
         type="text"
         name="title"
@@ -40,19 +36,24 @@ export function renderAdminPage(
         required
         autofocus
       />
-      <textarea
-        name="content"
-        placeholder="Markdown content..."
-        class="admin-textarea"
-        rows="20"
-        required
-      ></textarea>
+      <input
+        type="text"
+        name="description"
+        placeholder="Cover image description (alt text, optional)"
+        class="admin-input"
+      />
+      <input
+        type="file"
+        name="cover"
+        accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml"
+        class="admin-file-input"
+      />
+      <p class="admin-media-hint">Cover image is optional (PNG, JPG, GIF, WebP, SVG)</p>
       <div class="admin-actions">
-        <button type="submit" class="admin-btn">Publish</button>
+        <button type="submit" class="admin-btn">Create</button>
         <a href="/" class="admin-link">Cancel</a>
       </div>
     </form>
-    ${uploadToken ? renderMediaSection({ token: uploadToken }, tempMediaFiles, mediaError) : ''}
   </section>`
 }
 

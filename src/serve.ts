@@ -9,6 +9,11 @@ app.get('/posts/:slug', (c) => {
   return c.redirect(`/posts/${c.req.param('slug')}/`)
 })
 
+// Redirect /about → /about/ for correct static index.html resolution
+app.get('/about', (c) => {
+  return c.redirect('/about/')
+})
+
 app.use('/*', serveStatic({ root: './public' }))
 
 serve({ fetch: app.fetch, port: 3000 }, (info) => {

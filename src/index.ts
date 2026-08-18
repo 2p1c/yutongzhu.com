@@ -14,6 +14,8 @@ app.use('/images/*', serveStatic({ root: './public' }))
 app.use('/favicon.png', serveStatic({ root: './public' }))
 // Serve post media files from src/posts/<slug>/media/
 app.use('/posts/*', serveStatic({ root: './src' }))
+// Serve the standalone about page
+app.use('/about/*', serveStatic({ root: './public' }))
 
 app.route('/', home)
 app.route('/', posts)
