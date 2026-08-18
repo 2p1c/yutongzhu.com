@@ -38,9 +38,12 @@ Views live in `src/views/` and are TypeScript functions returning Hono `html` ta
 ### File-based storage (no database)
 
 Posts are directories under `src/posts/<date>-<slug>/` containing:
-- `meta.json` — `{ title, date, description, published }`
-- `index.md` — Markdown body
+- `meta.json` — `{ title, titleEn, date, description, published }`
+- `index.md` — Markdown body (Chinese, the default language)
+- `index_en.md` — optional English translation
 - `media/` — images and videos referenced in the post
+
+`index_en.md` / `titleEn` are auto-generated on publish/save by `src/lib/model.ts`, which translates `index.md` via an OpenAI-compatible endpoint configured with `TRANSLATE_BASE_URL` / `TRANSLATE_API_KEY` / `TRANSLATE_MODEL` in `.env`.
 
 `src/lib/post-storage.ts` provides the full CRUD API. There is a temp-upload workflow for media attached to unpublished posts: files land under `/tmp/` using upload tokens, then migrate to the post directory on publish.
 

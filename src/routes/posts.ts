@@ -12,11 +12,14 @@ async function servePost(c: any, slug: string) {
     return c.notFound()
   }
   const contentHtml = renderMarkdown(post.content)
+  const contentHtmlEn = post.contentEn ? renderMarkdown(post.contentEn) : undefined
   return c.html(renderLayout({
     title: post.title,
     content: renderPostBody({
       title: post.title,
+      titleEn: post.titleEn,
       contentHtml,
+      contentHtmlEn,
       createdAt: post.createdAt
     })
   }))

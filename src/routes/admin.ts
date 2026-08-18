@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { getAllPostListItems, getPostBySlug, createPost, updatePost, getMediaFiles, saveMediaFile, deleteMediaFile, validateMediaFile, generateUploadToken, getTempMediaFiles, saveTempMediaFile, deleteTempMediaFile, migrateTempMedia } from '../lib/post-storage.js'
 import { authGuard } from '../lib/auth.js'
+import { translateAndSave } from '../lib/model.js'
 import { renderLayout } from '../views/layout.js'
 import { renderAdminPage, renderEditForm } from '../views/admin.js'
 
@@ -37,6 +38,7 @@ admin.post('/admin/edit/:slug', authGuard, async (c) => {
   const title = body.title as string
   const content = body.content as string
   const updated = await updatePost(slug, title, content)
+  await translateAndSave(updated.slug, title, content)
   return c.redirect('/admin')
 })
 
@@ -47,6 +49,7 @@ admin.post('/admin/posts', authGuard, async (c) => {
   const token = body.upload_token as string | undefined
   const post = await createPost(title, content)
   if (token) await migrateTempMedia(token, post.slug)
+  await translateAndSave(post.slug, title, content)
   return c.redirect(`/admin/edit/${post.slug}`)
 })
 

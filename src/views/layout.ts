@@ -11,7 +11,7 @@ interface LayoutProps {
 
 export function renderLayout(props: LayoutProps) {
   return html`<!DOCTYPE html>
-<html lang="zh-CN" data-lang="en">
+<html lang="zh-CN" data-lang="zh">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">

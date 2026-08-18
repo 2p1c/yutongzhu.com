@@ -1,9 +1,9 @@
-Maybe I had wrong decisions in my time managment.
+也许我在时间管理上做了错误的决定。
 
-Maybe I just lack of motivations.
+也许我只是缺乏动力。
 
-Maybe I just too vulnerable to do my job.
+也许我只是太脆弱，做不好自己的工作。
 
-Maybe I just have some bad habbits.
+也许我只是有一些坏习惯。
 
-Above all, I always know what I should do.
+但归根结底，我一直都知道自己该做什么。

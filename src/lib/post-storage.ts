@@ -21,7 +21,7 @@ const MAX_FILE_SIZE = 50 * 1024 * 1024 // 50 MB
 
 export interface PostMeta {
   title: string
-  titleZh?: string
+  titleEn?: string
   date: string
   description?: string
   published: boolean
@@ -30,9 +30,9 @@ export interface PostMeta {
 export interface Post {
   slug: string
   title: string
-  titleZh?: string
+  titleEn?: string
   content: string
-  contentZh?: string
+  contentEn?: string
   createdAt: Date
   description?: string
   published: boolean
@@ -41,7 +41,7 @@ export interface Post {
 export interface PostListItem {
   slug: string
   title: string
-  titleZh?: string
+  titleEn?: string
   createdAt: Date
 }
 
@@ -61,13 +61,13 @@ function parseMeta(raw: string, slug: string): PostMeta {
   return meta
 }
 
-function postFromDir(slug: string, meta: PostMeta, content: string, contentZh?: string): Post {
+function postFromDir(slug: string, meta: PostMeta, content: string, contentEn?: string): Post {
   return {
     slug,
     title: meta.title,
-    titleZh: meta.titleZh,
+    titleEn: meta.titleEn,
     content,
-    contentZh,
+    contentEn,
     createdAt: new Date(meta.date),
     description: meta.description,
     published: meta.published,
@@ -78,7 +78,7 @@ function postListItemFromDir(slug: string, meta: PostMeta): PostListItem {
   return {
     slug,
     title: meta.title,
-    titleZh: meta.titleZh,
+    titleEn: meta.titleEn,
     createdAt: new Date(meta.date),
   }
 }
@@ -142,13 +142,13 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
     const metaRaw = await readFile(join(POSTS_DIR, slug, 'meta.json'), 'utf-8')
     const meta = parseMeta(metaRaw, slug)
     const content = await readFile(join(POSTS_DIR, slug, 'index.md'), 'utf-8')
-    let contentZh: string | undefined
+    let contentEn: string | undefined
     try {
-      contentZh = await readFile(join(POSTS_DIR, slug, 'index.zh.md'), 'utf-8')
+      contentEn = await readFile(join(POSTS_DIR, slug, 'index_en.md'), 'utf-8')
     } catch {
-      contentZh = undefined
+      contentEn = undefined
     }
-    return postFromDir(slug, meta, content, contentZh)
+    return postFromDir(slug, meta, content, contentEn)
   } catch {
     return null
   }
@@ -195,7 +195,7 @@ export async function updatePost(
 
   const meta: PostMeta = {
     title,
-    titleZh: existing.titleZh,
+    titleEn: existing.titleEn,
     date: existing.createdAt.toISOString().split('T')[0],
     description: existing.description ?? '',
     published: existing.published,
@@ -206,6 +206,18 @@ export async function updatePost(
   await writeFile(join(dir, 'index.md'), content, 'utf-8')
 
   return postFromDir(newSlug, meta, content)
+}
+
+export async function saveTranslation(
+  slug: string,
+  titleEn: string,
+  contentEn: string,
+): Promise<void> {
+  const dir = join(POSTS_DIR, slug)
+  await writeFile(join(dir, 'index_en.md'), contentEn, 'utf-8')
+  const meta = JSON.parse(await readFile(join(dir, 'meta.json'), 'utf-8')) as PostMeta
+  meta.titleEn = titleEn
+  await writeFile(join(dir, 'meta.json'), JSON.stringify(meta, null, 4) + '\n', 'utf-8')
 }
 
 // ── Media helpers ──

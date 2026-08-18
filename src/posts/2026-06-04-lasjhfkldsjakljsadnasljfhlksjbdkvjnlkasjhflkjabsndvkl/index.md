@@ -1,15 +1,14 @@
 <div align="center">
 
-![How should we start](./media/header.png)
+![我们该如何开始](./media/header.png)
 
 </div>
-This is my first blog, or article, whatever...
+这是我的第一篇博客，或者说文章，随便啦……
 
-Let's forking gogogogogogogogo
+让我们 fork 起来，冲鸭冲鸭冲！
 
 <div align="center">
 
-![aha](./media/oYAAeAEIEBARwSpfD8FETQDKLvLbAlBiDEfjAp.gif)
+![啊哈](./media/oYAAeAEIEBARwSpfD8FETQDKLvLbAlBiDEfjAp.gif)
 
 </div>
-

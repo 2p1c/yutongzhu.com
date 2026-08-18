@@ -4,7 +4,7 @@ import { html } from 'hono/html'
 interface PostListItem {
   slug: string
   title: string
-  titleZh?: string
+  titleEn?: string
   createdAt: Date
 }
 
@@ -21,7 +21,7 @@ export function renderHomeBody(posts: PostListItem[]) {
                 <li class="post-item">
                 <a class="post-title-link" href="/posts/${post.slug}/">
                   <span class="post-date">${dateStr}</span>
-                  ${post.titleZh ? html`<span class="lang-en">${post.title}</span><span class="lang-zh">${post.titleZh}</span>` : post.title}
+                  ${post.titleEn ? html`<span class="lang-zh">${post.title}</span><span class="lang-en">${post.titleEn}</span>` : post.title}
                 </a>
                 </li>
             `
