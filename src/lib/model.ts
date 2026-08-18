@@ -1,5 +1,5 @@
 import OpenAI from 'openai'
-import { saveTranslation } from './post-storage.js'
+import { getPostBySlug, saveTranslation } from './post-storage.js'
 
 // 通用的大模型配置：一个 Model 就是一个 OpenAI 兼容端点 + 模型名。
 // 换服务商只需改 .env 里的三个 TRANSLATE_* 变量。
@@ -16,6 +16,20 @@ const model: Model = {
 }
 
 const client = new OpenAI({ baseURL: model.baseUrl, apiKey: model.apiKey })
+
+function splitParagraphs(text: string): string[] {
+  return text.split(/\n{2,}/).map((p) => p.trim()).filter((p) => p.length > 0)
+}
+
+function buildReuseMap(oldContent: string, oldContentEn: string): Map<string, string> {
+  const oldZh = splitParagraphs(oldContent)
+  const oldEn = splitParagraphs(oldContentEn)
+  const map = new Map<string, string>()
+  for (let i = 0; i < oldZh.length && i < oldEn.length; i++) {
+    map.set(oldZh[i], oldEn[i])
+  }
+  return map
+}
 
 // 翻译系统提示词（即「Agent 接口」）。json_object 模式要求提示词里出现「JSON」字样，已满足。
 const SYSTEM_PROMPT = `你是一名翻译专家，负责把中文 Markdown 博文翻译成自然、地道的英文。翻译需达到「信达雅」标准：「信」即忠实于原文的内容与意图；「达」即译文通顺易懂、表达清晰；「雅」即追求译文的文化审美和语言优美。目标是创作出既忠于原作精神、又符合目标语言文化和读者审美的译文，可调整语气和风格，并考虑某些词语的文化内涵和地区差异。
@@ -50,11 +64,63 @@ async function translatePost(
   }
 }
 
+// 增量翻译：只翻译变更段落，`contextParagraphs` 作为术语一致的参考上下文。
+async function translateParagraphs(
+  paragraphs: string[],
+  contextParagraphs: string[],
+): Promise<string[]> {
+  const ctx =
+    contextParagraphs.length > 0
+      ? `以下是同一篇文章中未改动的段落，仅供术语参考，不要翻译：\n${contextParagraphs
+          .map((p) => `[CTX] ${p}`)
+          .join('\n\n')}\n\n`
+      : ''
+  const userContent =
+    `${ctx}请按顺序把以下段落翻译成英文，保持 Markdown 结构、代码块、URL、图片语法原样：\n${paragraphs
+      .map((p, i) => `[T${i + 1}] ${p}`)
+      .join('\n\n')}\n\n只输出 JSON：{"translations": ["...", "..."]}`
+  const completion = await client.chat.completions.create({
+    model: model.model,
+    messages: [
+      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'user', content: userContent },
+    ],
+    response_format: { type: 'json_object' },
+  })
+  return (JSON.parse(completion.choices[0].message.content ?? '') as {
+    translations: string[]
+  }).translations
+}
+
 export async function translateAndSave(
   slug: string,
   title: string,
   content: string,
 ): Promise<void> {
-  const { titleEn, contentEn } = await translatePost(title, content)
-  await saveTranslation(slug, titleEn, contentEn)
+  const existing = await getPostBySlug(slug)
+
+  if (!existing?.contentEn || existing.title !== title) {
+    const { titleEn, contentEn } = await translatePost(title, content)
+    await saveTranslation(slug, titleEn, contentEn)
+    return
+  }
+
+  const reuseMap = buildReuseMap(existing.content, existing.contentEn)
+  const newParas = splitParagraphs(content)
+  const translations: (string | undefined)[] = newParas.map((p) => reuseMap.get(p))
+  const toTranslate: string[] = []
+  for (let i = 0; i < newParas.length; i++) {
+    if (translations[i] === undefined) toTranslate.push(newParas[i])
+  }
+
+  if (toTranslate.length === 0) return
+
+  const newTranslations = await translateParagraphs(toTranslate, [...reuseMap.keys()])
+  let j = 0
+  for (let i = 0; i < translations.length; i++) {
+    if (translations[i] === undefined) translations[i] = newTranslations[j++]
+  }
+
+  // existing.contentEn 存在 ⇒ existing.titleEn 由 saveTranslation 同步写入，必存在。
+  await saveTranslation(slug, existing.titleEn!, translations.join('\n\n'))
 }
