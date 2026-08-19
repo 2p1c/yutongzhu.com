@@ -37,8 +37,9 @@ admin.post('/admin/edit/:slug', authGuard, async (c) => {
   const content = body.content as string
   const date = body.date as string | undefined
   const published = body.published === 'true'
+  const previous = await getPostBySlug(slug)
   const updated = await updatePost(slug, title, content, date, published)
-  await translateAndSave(updated.slug, title, content)
+  await translateAndSave(updated.slug, title, content, previous)
   return c.redirect('/admin')
 })
 

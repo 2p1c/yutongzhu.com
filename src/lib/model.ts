@@ -1,5 +1,5 @@
 import OpenAI from 'openai'
-import { getPostBySlug, saveTranslation } from './post-storage.js'
+import { getPostBySlug, saveTranslation, type Post } from './post-storage.js'
 
 // 通用的大模型配置：一个 Model 就是一个 OpenAI 兼容端点 + 模型名。
 // 换服务商只需改 .env 里的三个 TRANSLATE_* 变量。
@@ -96,8 +96,12 @@ export async function translateAndSave(
   slug: string,
   title: string,
   content: string,
+  previous?: Post | null,
 ): Promise<void> {
-  const existing = await getPostBySlug(slug)
+  // `previous` is the post's state BEFORE the content was written to disk.
+  // Without it, getPostBySlug would read the already-overwritten content, so the
+  // reuse map below would compare new paragraphs against themselves and skip translation.
+  const existing = previous ?? (await getPostBySlug(slug))
 
   if (!existing?.contentEn || existing.title !== title) {
     const { titleEn, contentEn } = await translatePost(title, content)

@@ -1,0 +1,1 @@
+Maybe I just don't manage my time well; maybe I just lack motivation; maybe I'm just too fragile to do my job well; maybe I just have some bad habits; but at the end of the day, I've always known what I should do, and everyone knows it.
