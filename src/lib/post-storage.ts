@@ -43,6 +43,7 @@ export interface PostListItem {
   title: string
   titleEn?: string
   createdAt: Date
+  published: boolean
 }
 
 export interface MediaFile {
@@ -80,6 +81,7 @@ function postListItemFromDir(slug: string, meta: PostMeta): PostListItem {
     title: meta.title,
     titleEn: meta.titleEn,
     createdAt: new Date(meta.date),
+    published: meta.published,
   }
 }
 
@@ -92,7 +94,9 @@ async function postDirExists(slug: string): Promise<boolean> {
   }
 }
 
-export async function getAllPostListItems(): Promise<PostListItem[]> {
+export async function getAllPostListItems(
+  options: { includeUnpublished?: boolean } = {},
+): Promise<PostListItem[]> {
   const entries = await readdir(POSTS_DIR, { withFileTypes: true })
   const items: PostListItem[] = []
 
@@ -102,7 +106,7 @@ export async function getAllPostListItems(): Promise<PostListItem[]> {
     try {
       const metaRaw = await readFile(join(POSTS_DIR, slug, 'meta.json'), 'utf-8')
       const meta = parseMeta(metaRaw, slug)
-      if (meta.published) {
+      if (options.includeUnpublished || meta.published) {
         items.push(postListItemFromDir(slug, meta))
       }
     } catch {
@@ -154,8 +158,13 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
   }
 }
 
-export async function createPost(title: string, content: string): Promise<Post> {
-  const now = new Date()
+export async function createPost(
+  title: string,
+  content: string,
+  date?: string,
+  published: boolean = true,
+): Promise<Post> {
+  const now = date ? new Date(date) : new Date()
   const slug = generateSlug(title, now)
   const dir = join(POSTS_DIR, slug)
 
@@ -165,7 +174,7 @@ export async function createPost(title: string, content: string): Promise<Post> 
     title,
     date: now.toISOString().split('T')[0],
     description: '',
-    published: true,
+    published,
   }
 
   await writeFile(join(dir, 'meta.json'), JSON.stringify(meta, null, 4) + '\n', 'utf-8')
@@ -178,6 +187,8 @@ export async function updatePost(
   slug: string,
   title: string,
   content: string,
+  date?: string,
+  published?: boolean,
 ): Promise<Post> {
   const existing = await getPostBySlug(slug)
   if (!existing) throw new Error(`Post "${slug}" not found`)
@@ -193,12 +204,25 @@ export async function updatePost(
     await rename(oldDir, newDir)
   }
 
+  let dateValue: string
+  if (date) {
+    const parsedDate = new Date(date)
+    if (!isNaN(parsedDate.getTime())) {
+      dateValue = parsedDate.toISOString().split('T')[0]
+    } else {
+      console.warn(`Invalid date: ${date}, using existing createdAt`)
+      dateValue = existing.createdAt.toISOString().split('T')[0]
+    }
+  } else {
+    dateValue = existing.createdAt.toISOString().split('T')[0]
+  }
+
   const meta: PostMeta = {
     title,
     titleEn: existing.titleEn,
-    date: existing.createdAt.toISOString().split('T')[0],
+    date: dateValue,
     description: existing.description ?? '',
-    published: existing.published,
+    published: published ?? existing.published,
   }
 
   const dir = join(POSTS_DIR, newSlug)

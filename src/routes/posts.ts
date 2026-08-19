@@ -13,8 +13,9 @@ async function servePost(c: any, slug: string) {
   }
   const contentHtml = renderMarkdown(post.content)
   const contentHtmlEn = post.contentEn ? renderMarkdown(post.contentEn) : undefined
+  const pageTitle = post.published ? post.title : `[DRAFT] ${post.title}`
   return c.html(renderLayout({
-    title: post.title,
+    title: pageTitle,
     content: renderPostBody({
       title: post.title,
       titleEn: post.titleEn,

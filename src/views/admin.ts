@@ -5,24 +5,17 @@ interface PostItem {
   slug: string
   title: string
   createdAt: Date
+  published: boolean
 }
 
 export function renderAdminPage(posts: PostItem[], error?: string) {
+  const today = new Date().toISOString().split('T')[0]
   return html`<section class="admin">
-    <h2>Posts</h2>
-    ${posts.length === 0
-      ? html`<p class="admin-empty">No posts yet.</p>`
-      : html`<ul class="admin-post-list">
-          ${posts.map(p => {
-            const dateStr = new Date(p.createdAt).toISOString().split('T')[0]
-            return html`<li class="admin-post-item">
-              <span class="admin-post-date">${dateStr}</span>
-              <a class="admin-post-title" href="/posts/${p.slug}/">${p.title}</a>
-              <a class="admin-post-edit" href="/admin/edit/${p.slug}">Edit</a>
-            </li>`
-          })}
-        </ul>`
-    }
+    <h2>Published</h2>
+    ${renderPostList(posts.filter(p => p.published))}
+
+    <h2>Drafts</h2>
+    ${renderPostList(posts.filter(p => !p.published))}
 
     ${error ? html`<p class="admin-media-error">${error}</p>` : ''}
 
@@ -35,6 +28,13 @@ export function renderAdminPage(posts: PostItem[], error?: string) {
         class="admin-input"
         required
         autofocus
+      />
+      <input
+        type="date"
+        name="date"
+        class="admin-input"
+        value="${today}"
+        required
       />
       <input
         type="text"
@@ -58,10 +58,11 @@ export function renderAdminPage(posts: PostItem[], error?: string) {
 }
 
 export function renderEditForm(
-  post: { slug: string; title: string; content: string },
+  post: { slug: string; title: string; content: string; createdAt: Date },
   mediaFiles: MediaFile[] = [],
   mediaError?: string,
 ) {
+  const dateStr = post.createdAt.toISOString().split('T')[0]
   return html`<section class="admin">
     <h2>Edit</h2>
     <form method="POST" action="/admin/edit/${post.slug}">
@@ -74,6 +75,13 @@ export function renderEditForm(
         required
         autofocus
       />
+      <input
+        type="date"
+        name="date"
+        class="admin-input"
+        value="${dateStr}"
+        required
+      />
       <textarea
         name="content"
         placeholder="Markdown content..."
@@ -82,12 +90,29 @@ export function renderEditForm(
         required
       >${post.content}</textarea>
       <div class="admin-actions">
-        <button type="submit" class="admin-btn">Save</button>
+        <button type="submit" name="published" value="false" class="admin-btn">Save as draft</button>
+        <button type="submit" name="published" value="true" class="admin-btn">Publish</button>
         <a href="/admin" class="admin-link">Cancel</a>
       </div>
     </form>
     ${renderMediaSection({ slug: post.slug }, mediaFiles, mediaError)}
   </section>`
+}
+
+function renderPostList(posts: PostItem[]) {
+  if (posts.length === 0) {
+    return html`<p class="admin-empty">No posts yet.</p>`
+  }
+  return html`<ul class="admin-post-list">
+    ${posts.map(p => {
+      const dateStr = new Date(p.createdAt).toISOString().split('T')[0]
+      return html`<li class="admin-post-item">
+        <span class="admin-post-date">${dateStr}</span>
+        <a class="admin-post-title" href="/posts/${p.slug}/">${p.title}</a>
+        <a class="admin-post-edit" href="/admin/edit/${p.slug}">Edit</a>
+      </li>`
+    })}
+  </ul>`
 }
 
 function formatSize(bytes: number): string {

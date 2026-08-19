@@ -8,7 +8,7 @@ import { renderAdminPage, renderEditForm } from '../views/admin.js'
 const admin = new Hono()
 
 admin.get('/admin', authGuard, async (c) => {
-  const posts = await getAllPostListItems()
+  const posts = await getAllPostListItems({ includeUnpublished: true })
   const error = c.req.query('error') ?? undefined
   return c.html(renderLayout({
     title: 'Admin',
@@ -35,7 +35,9 @@ admin.post('/admin/edit/:slug', authGuard, async (c) => {
   const body = await c.req.parseBody()
   const title = body.title as string
   const content = body.content as string
-  const updated = await updatePost(slug, title, content)
+  const date = body.date as string | undefined
+  const published = body.published === 'true'
+  const updated = await updatePost(slug, title, content, date, published)
   await translateAndSave(updated.slug, title, content)
   return c.redirect('/admin')
 })
@@ -44,6 +46,7 @@ admin.post('/admin/posts', authGuard, async (c) => {
   const body = await c.req.parseBody()
   const title = body.title as string
   const description = ((body.description as string) ?? '').trim() || title
+  const date = body.date as string | undefined
 
   // Optional cover image: validate before creating the post so a bad upload
   // never leaves behind an empty post directory.
@@ -68,7 +71,9 @@ admin.post('/admin/posts', authGuard, async (c) => {
     }
   }
 
-  const post = await createPost(title, '')
+  // New posts start as drafts so empty content never leaks to the public site;
+  // the author publishes from the edit page once content is ready.
+  const post = await createPost(title, '', date, false)
 
   if (coverFile) {
     const buffer = await coverFile.arrayBuffer()
