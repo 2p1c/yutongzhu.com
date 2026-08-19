@@ -1,13 +1,14 @@
 // Inline client-side script injected into the document <head>.
-// The HTML ships with `data-lang="zh"` on <html>; this script restores a saved
-// English preference before first paint and wires the translate toggle to
+// The HTML ships with `data-lang="en"` on <html>; this script restores a saved
+// language preference before first paint and wires the translate toggle to
 // switch languages without a reload. Chinese/English content swaps via CSS,
 // driven by the `data-lang` attribute.
 export const langScript = `(function () {
   var root = document.documentElement;
 
   try {
-    if (localStorage.getItem('lang') === 'en') root.setAttribute('data-lang', 'en');
+    var saved = localStorage.getItem('lang');
+    if (saved === 'en' || saved === 'zh') root.setAttribute('data-lang', saved);
   } catch (e) { /* localStorage unavailable */ }
 
   document.addEventListener('DOMContentLoaded', function () {

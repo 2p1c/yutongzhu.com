@@ -11,7 +11,7 @@ interface LayoutProps {
 
 export function renderLayout(props: LayoutProps) {
   return html`<!DOCTYPE html>
-<html lang="zh-CN" data-lang="zh">
+<html lang="en" data-lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -38,7 +38,9 @@ export function renderLayout(props: LayoutProps) {
   </header>
   ${props.content}
   <footer class="site-footer">
-    <p>Thanks to <a href="https://mariozechner.at/">Mario Zechner</a>, a fantastic developer with truly inspiring blog! I basically copy his website style. This site uses no cookies or tracking technologies and collects no personal information.</p>
+    <p>Thanks to <a href="https://mariozechner.at/">Mario Zechner</a>, a fantastic developer with truly inspiring blog! I basically copy his website style. </p>
+    <p>This site uses no cookies or tracking technologies and collects no personal information.</p>
+    <p>© Copyright ${new Date().getFullYear()} by Yutong Zhu.</p>
   </footer>
 </body>
 </html>`
