@@ -36,7 +36,7 @@ export function renderHomeBody(posts: PostListItem[]) {
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 8h8"/><path d="M7 12h10"/><path d="M7 16h6"/></svg>
         </a></span>
     </h2>
-    <p><span class="lang-en">I'm a student who want to find inner peace. Keep learning, keep building, keep dreaming, never give up.</span><span class="lang-zh">我是一个想找到内心平静的学生。保持学习，保持构建，保持梦想，永不放弃。</span></p>
+    <p><span class="lang-en">I'm a student who want to find inner peace. Build my own identity outside the rules dictated by the world. Keep learning, keep building, keep dreaming, never give up.</span><span class="lang-zh">我是一个想找到内心平静的学生。努力尝试在被社会告知的规则之外建立自己的身份。持续学习，持续构建，持续幻想，永不放弃。</span></p>
     <p><span class="lang-en">My primary technical expertise is lies in eat, sleep, dream a lot and computer games</span><span class="lang-zh">我的主要技术专长在于吃、睡、做很多梦，以及电脑游戏。</span></p>
   </section>
 
