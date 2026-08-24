@@ -322,40 +322,6 @@ h2 {
   margin-top: 40px;
 }
 
-/* ── CV (about page) ──
- * Mirrors the original rendercv output (.markdown-body).
- * Contact icons (kept from previous version) sit in .cv-contact. */
-
-.cv-contact {
-  text-align: center;
-  color: var(--dimmed-text-color);
-  font-size: 0.9rem;
-  margin: 0 0 1.2em;
-}
-
-.cv-contact-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.cv-icon {
-  width: 14px;
-  height: 14px;
-  display: inline-block;
-  vertical-align: -2px;
-  flex-shrink: 0;
-}
-
-.cv-name {
-  font-family: normal, 'Songti SC', 'Noto Serif SC', serif;
-  font-size: 25pt;
-  font-weight: 700;
-  text-align: left;
-  margin: 0 0 0.6em;
-  line-height: 1.1;
-}
-
 /* ── Admin ── */
 .admin {
   margin-top: 0;
