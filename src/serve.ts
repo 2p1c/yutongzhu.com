@@ -14,6 +14,11 @@ app.get('/about', (c) => {
   return c.redirect('/about/')
 })
 
+// Redirect /agent → /agent/ for correct static index.html resolution
+app.get('/agent', (c) => {
+  return c.redirect('/agent/')
+})
+
 app.use('/*', serveStatic({ root: './public' }))
 
 serve({ fetch: app.fetch, port: 3000 }, (info) => {

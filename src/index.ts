@@ -16,6 +16,8 @@ app.use('/favicon.png', serveStatic({ root: './public' }))
 app.use('/posts/*', serveStatic({ root: './src' }))
 // Serve the standalone about page
 app.use('/about/*', serveStatic({ root: './public' }))
+// Serve the standalone agent page
+app.use('/agent/*', serveStatic({ root: './public' }))
 
 app.route('/', home)
 app.route('/', posts)
