@@ -5,3 +5,5 @@ dist
 .DS_Store
 public/index.html
 public/posts/
+docs/
+CLAUDE.md
