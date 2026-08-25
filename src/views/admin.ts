@@ -96,6 +96,59 @@ export function renderEditForm(
       </div>
     </form>
     ${renderMediaSection({ slug: post.slug }, mediaFiles, mediaError)}
+    <script>
+      (function () {
+        const form = document.querySelector('form[action^="/admin/edit/"]')
+        if (!form) return
+        const slug = new URL(form.action).pathname.split('/').pop()
+        const KEY = 'draft:post:' + slug
+        const title = form.elements.title
+        const date = form.elements.date
+        const content = form.elements.content
+        let timer
+
+        function persist() {
+          localStorage.setItem(KEY, JSON.stringify({
+            title: title.value,
+            date: date.value,
+            content: content.value,
+            savedAt: Date.now(),
+          }))
+        }
+        form.addEventListener('input', () => {
+          clearTimeout(timer)
+          timer = setTimeout(persist, 2000)
+        })
+
+        // 进入页面时恢复上次未保存的草稿
+        const raw = localStorage.getItem(KEY)
+        if (raw) {
+          try {
+            const draft = JSON.parse(raw)
+            title.value = draft.title || title.value
+            date.value = draft.date || date.value
+            content.value = draft.content || content.value
+            const bar = document.createElement('div')
+            bar.className = 'admin-draft-bar'
+            const when = new Date(draft.savedAt).toLocaleTimeString()
+            bar.appendChild(document.createTextNode('已恢复上次未保存的草稿（' + when + '） '))
+            const discard = document.createElement('a')
+            discard.href = '#'
+            discard.textContent = '丢弃草稿'
+            discard.onclick = (e) => {
+              e.preventDefault()
+              localStorage.removeItem(KEY)
+              location.reload()
+            }
+            bar.appendChild(discard)
+            form.insertBefore(bar, form.firstChild)
+          } catch (e) {}
+        }
+
+        // 表单提交成功后清掉草稿
+        form.addEventListener('submit', () => localStorage.removeItem(KEY))
+      })()
+    </script>
   </section>`
 }
 

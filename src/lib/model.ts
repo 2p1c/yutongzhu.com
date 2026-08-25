@@ -1,5 +1,6 @@
 import OpenAI from 'openai'
 import { getPostBySlug, saveTranslation, type Post } from './post-storage.js'
+import { computeReuse } from './reuse.js'
 
 // 通用的大模型配置：一个 Model 就是一个 OpenAI 兼容端点 + 模型名。
 // 换服务商只需改 .env 里的三个 TRANSLATE_* 变量。
@@ -16,20 +17,6 @@ const model: Model = {
 }
 
 const client = new OpenAI({ baseURL: model.baseUrl, apiKey: model.apiKey })
-
-function splitParagraphs(text: string): string[] {
-  return text.split(/\n{2,}/).map((p) => p.trim()).filter((p) => p.length > 0)
-}
-
-function buildReuseMap(oldContent: string, oldContentEn: string): Map<string, string> {
-  const oldZh = splitParagraphs(oldContent)
-  const oldEn = splitParagraphs(oldContentEn)
-  const map = new Map<string, string>()
-  for (let i = 0; i < oldZh.length && i < oldEn.length; i++) {
-    map.set(oldZh[i], oldEn[i])
-  }
-  return map
-}
 
 // 翻译系统提示词（即「Agent 接口」）。json_object 模式要求提示词里出现「JSON」字样，已满足。
 const SYSTEM_PROMPT = `你是一名翻译专家，负责把中文 Markdown 博文翻译成自然、地道的英文。翻译需达到「信达雅」标准：「信」即忠实于原文的内容与意图；「达」即译文通顺易懂、表达清晰；「雅」即追求译文的文化审美和语言优美。目标是创作出既忠于原作精神、又符合目标语言文化和读者审美的译文，可调整语气和风格，并考虑某些词语的文化内涵和地区差异。
@@ -109,17 +96,15 @@ export async function translateAndSave(
     return
   }
 
-  const reuseMap = buildReuseMap(existing.content, existing.contentEn)
-  const newParas = splitParagraphs(content)
-  const translations: (string | undefined)[] = newParas.map((p) => reuseMap.get(p))
-  const toTranslate: string[] = []
-  for (let i = 0; i < newParas.length; i++) {
-    if (translations[i] === undefined) toTranslate.push(newParas[i])
-  }
+  const { translations, toTranslate, contextParagraphs } = computeReuse(
+    existing.content,
+    existing.contentEn,
+    content,
+  )
 
   if (toTranslate.length === 0) return
 
-  const newTranslations = await translateParagraphs(toTranslate, [...reuseMap.keys()])
+  const newTranslations = await translateParagraphs(toTranslate, contextParagraphs)
   let j = 0
   for (let i = 0; i < translations.length; i++) {
     if (translations[i] === undefined) translations[i] = newTranslations[j++]

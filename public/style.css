@@ -406,6 +406,25 @@ h2 {
   box-sizing: border-box;
 }
 
+.admin-draft-bar {
+  padding: 8px 12px;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  border-left: 3px solid var(--link-color);
+  background: var(--background-color);
+}
+
+.admin-draft-bar a {
+  color: var(--link-color);
+  text-decoration: none;
+}
+
+.admin-draft-bar a:hover {
+  text-decoration: underline;
+}
+
 .admin-btn {
   padding: 8px 24px;
   font-size: 0.95rem;

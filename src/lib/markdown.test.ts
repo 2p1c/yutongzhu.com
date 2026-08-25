@@ -26,6 +26,21 @@ describe('renderMarkdown', () => {
     expect(result).toContain('<code')
   })
 
+  it('applies pixel width from title slot', () => {
+    const result = renderMarkdown('![alt](/x.png "width=300")')
+    expect(result).toContain('<img src="/x.png" alt="alt" width="300"')
+  })
+
+  it('applies percentage width from title slot', () => {
+    const result = renderMarkdown('![alt](/x.png "width=50%")')
+    expect(result).toContain('width="50%"')
+  })
+
+  it('keeps ordinary title attribute as-is', () => {
+    const result = renderMarkdown('![alt](/x.png "some title")')
+    expect(result).toContain('title="some title"')
+  })
+
   it('converts paragraphs', () => {
     const result = renderMarkdown('A paragraph.')
     expect(result).toContain('<p>')
