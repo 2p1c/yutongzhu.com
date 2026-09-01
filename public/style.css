@@ -611,23 +611,6 @@ h2 {
   text-decoration: underline;
 }
 
-/* ── Agent page ── */
-.agent-cta {
-  display: inline-block;
-  padding: 10px 24px;
-  background: var(--btn-bg);
-  color: var(--btn-text);
-  border: none;
-  font-family: inherit;
-  font-size: 1rem;
-  line-height: 1.4;
-  text-decoration: none;
-}
-
-.agent-cta:hover {
-  background: var(--btn-bg-hover);
-}
-
 .site-footer {
   margin-top: 10px;
   padding-top: 6px;

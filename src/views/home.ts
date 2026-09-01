@@ -42,11 +42,11 @@ export function renderHomeBody(posts: PostListItem[]) {
 
   <section>
     <h2 class="bio-title">
-      <span class="bio-title-text">Chat with me<a href="/agent/" class="bio-title-link" aria-label="Chat with me" title="Chat with me">
+      <span class="bio-title-text">Chat with me<a href="/posts/2026-08-25-mmagent-my-minimal-agent/" class="bio-title-link" aria-label="mmagent(my-minimal-agent)" title="mmagent(my-minimal-agent)">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/><path d="M8 12h.01"/><path d="M12 12h.01"/><path d="M16 12h.01"/></svg>
         </a></span>
     </h2>
-    <p class="chat-desc"><span class="lang-zh"><a href="https://chat.yutongzhu.site/" target="_blank" rel="noopener">chat.yutongzhu.site</a> 是一个我用来练习的 AI web 应用层项目，使用 RAG 库集成了所有博文信息，能够通过 tool call 修改你的浏览器样式以及实现一些炫酷的功能。说你想说的，我承诺不会收集对话信息用于任何目的。</span><span class="lang-en"><a href="https://chat.yutongzhu.site/" target="_blank" rel="noopener">chat.yutongzhu.site</a> is an AI web-app project I built to practice. It uses a RAG library to index all my blog posts, and can tweak your browser's styling through tool calls to do some cool tricks. Say whatever you want — I promise I won't collect your conversation for any purpose.</span></p>
+    <p class="chat-desc"><span class="lang-zh"><a href="https://chat.yutongzhu.site/" target="_blank" rel="noopener">chat.yutongzhu.site</a> 是一个我用来练习的 AI web 应用层项目，通过Resend邮箱验证做了用户鉴权和会话管理，使用 RAG 库实现持久记忆，背后接入了一个我订阅的大模型API，能够通过 tool call 调用一些工具，这个我还在持续集成，预期实现一些比如修改你的浏览器样式以及一些炫酷的功能。说你想说的，我承诺不会收集对话信息用于任何目的。</span><span class="lang-en"><a href="https://chat.yutongzhu.site/" target="_blank" rel="noopener">chat.yutongzhu.site</a>is an AI web application layer project I'm using for practice. It uses Resend email verification for user authentication and session management, and employs a RAG library to implement persistent memory. Behind the scenes, it connects to a large model API that I've subscribed to, and supports tool calling via function calls—I'm still actively integrating this, with plans to implement features like modifying your browser styles and some other cool functionalities. Say whatever you'd like—I promise I won't collect any conversation data for any purpose.</span></p>
   </section>
 
   <section>
