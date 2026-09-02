@@ -29,4 +29,18 @@ I can also write some status checks or error codes for them to practice API spec
 
 </div>
 
-Next, I can prepare to integrate a complete Agent conversation API. The backend calls the Agent via HTTP requests. The Agent executes the runtime loop in a container, calls tools, and eventually obtains a final answer, which is split and returned, then stream-rendered in the frontend message window. That's roughly it. The Agent-side tool_call, backend RAG library, Auth authentication, and user management will be gradually added later.
+Later, I integrated a complete Agent conversation API. The backend calls the LLM API via HTTP requests, and the LLM decides whether to make tool calls (this is implemented by the LLM returning structured information to the Runtime, which reads the tool and parameters specified in the struct). The Agent executes the Runtime loop inside a container (the loop means executing a tool, returning the execution result to the LLM, which then thinks further and returns a message), ultimately obtaining a final answer (how to determine whether it's a final answer? There are several methods: 1. Let the LLM judge by itself; 2. Consider it the final answer when no more tool calls occur; 3. If the maximum step limit is exceeded, directly return the final answer). The Runtime splits the message and returns it, then renders it via SSE streaming in the frontend message window, roughly like that. The Agent-side tool_call, backend RAG library, Auth authentication and user management—all of these can be gradually integrated.
+
+User Authentication
+
+There are two mainstream approaches to integrating a RAG library. You can perform a retrieval before each reply and splice the retrieved results into the messages; alternatively, you can set up the RAG functionality as an Agent tool and let the LLM decide whether to call the RAG tool. The second method is more reasonable: it checks whether the current question needs cross-session retrieval or long-term memory, and then intentionally retrieves information from the knowledge base. The mainstream retrieval approach is usually vector recall + keyword/BM25 → rerank, and then the results are returned to the LLM. The RAG integration and retrieval method have already been designed in the Agent runtime, so how exactly should the RAG vector database be generated?
+
+As I understand it, a RAG library is a collection of sentence information (or semantics) in a high-dimensional space, where each sentence is mapped to a vector. The model that maps them into vectors has been trained on a large amount of text (just like ChatGPT), and it clearly understands the relationships between different sentences (such as hearts and Alice, rings and love). These relationships are reflected in the distance between two sentence vectors in the high-dimensional space (imagine two objects in a three-dimensional coordinate system). So the retrieval process is, as we just mentioned, converting our query into a vector, calculating which vectors in the semantic space are closest to it—those are the 'memories' we want—then extracting and concatenating them and returning them to the LLM. This is what makes up a RAG library. As it happens, I also know that these sentences and words are composed of tokens, so how we reasonably select them and convert them into RAG vectors will naturally greatly affect the subsequent retrieval results (just like converting the sentence 'Oranges are the only fruit in the world' into a vector versus converting 'oranges,' 'world,' 'only,' and 'fruit' separately into vectors will lead to different retrieval results).
+
+<div align = "center">
+
+![Go watch 3b1b, everyone!!](./media/WeChat7f3bace4670fc3ec4f293d2f7834b21d.jpg)
+
+</div>
+
+So how should we split sentences and convert them into RAG vectors? I think splitting needs to take into account semantic completeness, structure, and the capabilities of the embedding model.
