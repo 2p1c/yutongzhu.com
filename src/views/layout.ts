@@ -1,6 +1,7 @@
 import { html, raw } from 'hono/html'
 import { themeScript } from '../lib/theme.js'
 import { langScript } from '../lib/lang.js'
+import { codeCopyScript } from '../lib/code-copy.js'
 
 interface LayoutProps {
   title: string
@@ -17,6 +18,7 @@ export function renderLayout(props: LayoutProps) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script>${raw(themeScript)}</script>
   <script>${raw(langScript)}</script>
+  <script>${raw(codeCopyScript)}</script>
   <link rel="icon" type="image/ico" href="/images/favicon.ico" />
   <title>${props.title}</title>
   <link rel="preload" as="image" href="/images/home.jpg">

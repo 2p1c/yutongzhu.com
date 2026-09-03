@@ -21,9 +21,32 @@ describe('renderMarkdown', () => {
     expect(result).toContain('/images/foo.png')
   })
 
-  it('converts code blocks', () => {
+  it('converts code blocks with highlighting and copy button', () => {
     const result = renderMarkdown('```js\nconst x = 1\n```')
-    expect(result).toContain('<code')
+    expect(result).toContain('class="code-block"')
+    expect(result).toContain('class="code-copy"')
+    expect(result).toContain('language-javascript')
+    expect(result).toContain('<span class="hljs-keyword">const</span>')
+    expect(result).toContain('<span class="hljs-number">1</span>')
+  })
+
+  it('normalizes language aliases like Typescript and curl', () => {
+    const ts = renderMarkdown('```Typescript\nconst x = 1\n```')
+    expect(ts).toContain('language-typescript')
+    expect(ts).toContain('<span class="code-block-lang">typescript</span>')
+
+    const curl = renderMarkdown('``` curl\ncurl https://example.com\n```')
+    expect(curl).toContain('language-bash')
+    expect(curl).toContain('<span class="code-block-lang">bash</span>')
+  })
+
+  it('renders unlabeled code blocks without highlighting', () => {
+    const result = renderMarkdown('```\nplain text\n```')
+    expect(result).toContain('class="code-block"')
+    expect(result).toContain('class="code-copy"')
+    expect(result).toContain('<span class="code-block-lang">text</span>')
+    expect(result).not.toContain('language-')
+    expect(result).toContain('plain text')
   })
 
   it('applies pixel width from title slot', () => {
