@@ -48,12 +48,55 @@ export function renderAdminPage(posts: PostItem[], error?: string) {
         accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml"
         class="admin-file-input"
       />
-      <p class="admin-media-hint">Cover image is optional (PNG, JPG, GIF, WebP, SVG)</p>
+      <img id="cover-preview" class="admin-cover-preview" alt="" hidden />
+      <p class="admin-media-hint">Cover image is optional. Click to choose, or paste from clipboard (PNG, JPG, GIF, WebP, SVG)</p>
       <div class="admin-actions">
         <button type="submit" class="admin-btn">Create</button>
         <a href="/" class="admin-link">Cancel</a>
       </div>
     </form>
+    <script>
+      (function () {
+        const input = document.querySelector('input[name="cover"]')
+        const preview = document.getElementById('cover-preview')
+        if (!input || !preview) return
+
+        function showPreview(file) {
+          if (preview.src && preview.src.startsWith('blob:')) URL.revokeObjectURL(preview.src)
+          if (file && file.type.indexOf('image/') === 0) {
+            preview.src = URL.createObjectURL(file)
+            preview.hidden = false
+          } else {
+            preview.removeAttribute('src')
+            preview.hidden = true
+          }
+        }
+
+        function setCover(file) {
+          const dt = new DataTransfer()
+          dt.items.add(file)
+          input.files = dt.files
+          showPreview(file)
+        }
+
+        document.addEventListener('paste', function (e) {
+          const items = e.clipboardData && e.clipboardData.items
+          if (!items) return
+          for (let i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf('image/') !== 0) continue
+            const file = items[i].getAsFile()
+            if (!file) continue
+            e.preventDefault()
+            setCover(file)
+            break
+          }
+        })
+
+        input.addEventListener('change', function () {
+          showPreview(input.files && input.files[0])
+        })
+      })()
+    </script>
   </section>`
 }
 
@@ -212,8 +255,68 @@ function renderMediaSection(
         />
         <button type="submit" class="admin-btn admin-btn-small">Upload</button>
       </div>
-      <p class="admin-media-hint">PNG, JPG, GIF, WebP, SVG, MP4, WebM, MOV &mdash; max 50 MB</p>
+      <p class="admin-media-hint">PNG, JPG, GIF, WebP, SVG, MP4, WebM, MOV &mdash; max 50 MB. Paste an image into the article to upload and insert it.</p>
     </form>
+    <script>
+      (function () {
+        const form = document.querySelector('.admin-media-upload')
+        const textarea = document.querySelector('.admin-textarea')
+        if (!form || !textarea) return
+
+        const EXT = {
+          'image/jpeg': '.jpg',
+          'image/png': '.png',
+          'image/gif': '.gif',
+          'image/webp': '.webp',
+          'image/svg+xml': '.svg',
+        }
+
+        function namedFile(file, i) {
+          const ext = EXT[file.type] || '.png'
+          return new File([file], 'paste-' + Date.now() + '-' + i + ext, { type: file.type })
+        }
+
+        function insertAtCursor(snippet) {
+          const start = textarea.selectionStart
+          const end = textarea.selectionEnd
+          const before = textarea.value.slice(0, start)
+          const after = textarea.value.slice(end)
+          const lead = before && !before.endsWith('\\n') ? '\\n\\n' : (before.endsWith('\\n') && !before.endsWith('\\n\\n') ? '\\n' : '')
+          const trail = after && !after.startsWith('\\n') ? '\\n\\n' : (after.startsWith('\\n') && !after.startsWith('\\n\\n') ? '\\n' : '')
+          const text = lead + snippet + trail
+          textarea.value = before + text + after
+          const pos = (before + lead + snippet).length
+          textarea.selectionStart = textarea.selectionEnd = pos
+          textarea.focus()
+          textarea.dispatchEvent(new Event('input', { bubbles: true }))
+        }
+
+        document.addEventListener('paste', function (e) {
+          const items = e.clipboardData && e.clipboardData.items
+          if (!items) return
+          const files = []
+          for (let i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf('image/') !== 0) continue
+            const file = items[i].getAsFile()
+            if (file) files.push(file)
+          }
+          if (files.length === 0) return
+          e.preventDefault()
+
+          files.forEach(function (raw, i) {
+            const file = namedFile(raw, i)
+            const fd = new FormData()
+            fd.append('media', file)
+            const token = form.querySelector('input[name="token"]')
+            if (token) fd.append('token', token.value)
+            fetch(form.action, { method: 'POST', body: fd }).then(function (res) {
+              if (!res.ok || res.url.indexOf('error=') !== -1) return
+              insertAtCursor('<div align="center">\\n\\n![图片描述](./media/' + file.name + ')\\n\\n</div>')
+            })
+          })
+        })
+      })()
+    </script>
 
     ${mediaFiles.length === 0
       ? html`<p class="admin-media-empty">No media files yet.</p>`

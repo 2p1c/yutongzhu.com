@@ -585,6 +585,20 @@ h2 {
   flex: 1;
 }
 
+.admin-cover-preview {
+  display: block;
+  max-width: 240px;
+  max-height: 140px;
+  margin-top: 10px;
+  object-fit: contain;
+  background: var(--code-bg);
+  border: 1px solid var(--border-color);
+}
+
+.admin-cover-preview[hidden] {
+  display: none;
+}
+
 .admin-btn-small {
   padding: 6px 16px;
   font-size: 0.85rem;
