@@ -163,6 +163,23 @@ h2 {
   margin-bottom: 18px;
 }
 
+.post-list-source {
+  margin: 2px 0 0 0;
+  padding-left: 101px;
+  font-size: 0.85rem;
+  font-style: italic;
+  line-height: 1.35;
+}
+
+.post-list-source a {
+  color: var(--link-color);
+  text-decoration: none;
+}
+
+.post-list-source a:hover {
+  text-decoration: underline;
+}
+
 .post-date {
   font-size: 0.9375rem;
   line-height: 1.25rem;
@@ -244,6 +261,22 @@ h2 {
   font-weight: 800;
   margin: 0 0 13px 0;
   margin-top: 18px;
+}
+
+.post-source {
+  margin: 0 0 16px 0;
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
+.post-source a {
+  font-size: 1rem;
+  color: var(--link-color);
+  text-decoration: none;
+}
+
+.post-source a:hover {
+  text-decoration: underline;
 }
 
 .post-content {
@@ -496,6 +529,10 @@ h2 {
   margin-bottom: 12px;
   font-family: inherit;
   box-sizing: border-box;
+}
+
+select.admin-input {
+  cursor: pointer;
 }
 
 .admin-textarea {
