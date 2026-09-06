@@ -26,8 +26,6 @@ fixed-size vector representation，这其实就是我最近在学的核心主角
 
 还有个问题，何时使用它呢？也许我们不希望我只是问一下现在几点了然后Agent就去RAG库里翻翻找找返回 top k个最佳匹配然后整理给llm得出答案。合理的方式是让Agent自己决定是否需要调用RAG工具来获取额外的特定的信息。我们将RAG检索写成一个tool_call的形式，描述它的作用以及在何时可以调用，同时给每个RAG库带上描述它含有哪些知识的标签，从而让llm自行决定调用RAG工具并且选择最合适的知识库进行检索。还有很多优化措施，比如相似度阈值兜底，如果不够就换个库检索或者不采用等等。
 
-fine
-
 **references**
 
 [1][Advanced RAG on Hugging Face documentation using LangChain](https://huggingface.co/learn/cookbook/en/advanced_rag?utm_source=chatgpt.com)

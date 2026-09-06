@@ -21,7 +21,11 @@ async function servePost(c: any, slug: string) {
       titleEn: post.titleEn,
       contentHtml,
       contentHtmlEn,
-      createdAt: post.createdAt
+      createdAt: post.createdAt,
+      source:
+        post.section === 'reflections' && post.sourceUrl && post.sourceTitle
+          ? { url: post.sourceUrl, title: post.sourceTitle }
+          : undefined,
     })
   }))
 }

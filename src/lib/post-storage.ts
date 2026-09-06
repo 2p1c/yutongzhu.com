@@ -19,12 +19,39 @@ const ALLOWED_VIDEO_MIME = new Set([
 ])
 const MAX_FILE_SIZE = 50 * 1024 * 1024 // 50 MB
 
+export type PostSection = 'musings' | 'reflections'
+
+export interface PostSource {
+  url: string
+  title: string
+}
+
+export function normalizeSection(value: unknown): PostSection {
+  return value === 'reflections' ? 'reflections' : 'musings'
+}
+
+export function parseSource(url: unknown, title: unknown): PostSource | undefined {
+  const sourceTitle = typeof title === 'string' ? title.trim() : ''
+  const rawUrl = typeof url === 'string' ? url.trim() : ''
+  if (!sourceTitle || !rawUrl) return undefined
+  try {
+    const parsed = new URL(rawUrl)
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return undefined
+    return { url: parsed.href, title: sourceTitle }
+  } catch {
+    return undefined
+  }
+}
+
 export interface PostMeta {
   title: string
   titleEn?: string
   date: string
   description?: string
   published: boolean
+  section?: PostSection
+  sourceUrl?: string
+  sourceTitle?: string
 }
 
 export interface Post {
@@ -36,6 +63,9 @@ export interface Post {
   createdAt: Date
   description?: string
   published: boolean
+  section: PostSection
+  sourceUrl?: string
+  sourceTitle?: string
 }
 
 export interface PostListItem {
@@ -44,6 +74,9 @@ export interface PostListItem {
   titleEn?: string
   createdAt: Date
   published: boolean
+  section: PostSection
+  sourceUrl?: string
+  sourceTitle?: string
 }
 
 export interface MediaFile {
@@ -59,6 +92,7 @@ function parseMeta(raw: string, slug: string): PostMeta {
   if (!meta.title || !meta.date) {
     throw new Error(`Invalid meta.json in post "${slug}": missing title or date`)
   }
+  meta.section = normalizeSection(meta.section)
   return meta
 }
 
@@ -72,7 +106,16 @@ function postFromDir(slug: string, meta: PostMeta, content: string, contentEn?: 
     createdAt: new Date(meta.date),
     description: meta.description,
     published: meta.published,
+    section: normalizeSection(meta.section),
+    sourceUrl: meta.sourceUrl,
+    sourceTitle: meta.sourceTitle,
   }
+}
+
+function applySource(meta: PostMeta, source?: PostSource): void {
+  if (!source) return
+  meta.sourceUrl = source.url
+  meta.sourceTitle = source.title
 }
 
 function postListItemFromDir(slug: string, meta: PostMeta): PostListItem {
@@ -82,6 +125,9 @@ function postListItemFromDir(slug: string, meta: PostMeta): PostListItem {
     titleEn: meta.titleEn,
     createdAt: new Date(meta.date),
     published: meta.published,
+    section: normalizeSection(meta.section),
+    sourceUrl: meta.sourceUrl,
+    sourceTitle: meta.sourceTitle,
   }
 }
 
@@ -163,6 +209,8 @@ export async function createPost(
   content: string,
   date?: string,
   published: boolean = true,
+  section: PostSection = 'musings',
+  source?: PostSource,
 ): Promise<Post> {
   const now = date ? new Date(date) : new Date()
   const slug = generateSlug(title, now)
@@ -175,7 +223,9 @@ export async function createPost(
     date: now.toISOString().split('T')[0],
     description: '',
     published,
+    section: normalizeSection(section),
   }
+  applySource(meta, source)
 
   await writeFile(join(dir, 'meta.json'), JSON.stringify(meta, null, 4) + '\n', 'utf-8')
   await writeFile(join(dir, 'index.md'), content, 'utf-8')
@@ -189,6 +239,8 @@ export async function updatePost(
   content: string,
   date?: string,
   published?: boolean,
+  section?: PostSection,
+  source?: PostSource,
 ): Promise<Post> {
   const existing = await getPostBySlug(slug)
   if (!existing) throw new Error(`Post "${slug}" not found`)
@@ -223,7 +275,15 @@ export async function updatePost(
     date: dateValue,
     description: existing.description ?? '',
     published: published ?? existing.published,
+    section: section ? normalizeSection(section) : existing.section,
   }
+  applySource(
+    meta,
+    source ??
+      (existing.sourceUrl && existing.sourceTitle
+        ? { url: existing.sourceUrl, title: existing.sourceTitle }
+        : undefined),
+  )
 
   const dir = join(POSTS_DIR, newSlug)
   await writeFile(join(dir, 'meta.json'), JSON.stringify(meta, null, 4) + '\n', 'utf-8')

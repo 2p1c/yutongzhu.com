@@ -1,5 +1,57 @@
 import { html } from 'hono/html'
-import type { MediaFile } from '../lib/post-storage.js'
+import type { MediaFile, PostSection } from '../lib/post-storage.js'
+
+function renderSectionSelect(selected: PostSection = 'musings') {
+  if (selected === 'reflections') {
+    return html`<select name="section" class="admin-input" required>
+      <option value="musings">Musings</option>
+      <option value="reflections" selected>Reflections</option>
+    </select>`
+  }
+  return html`<select name="section" class="admin-input" required>
+    <option value="musings" selected>Musings</option>
+    <option value="reflections">Reflections</option>
+  </select>`
+}
+
+function renderSourceFields(source?: { url?: string; title?: string }) {
+  return html`<div class="admin-source-fields" hidden>
+    <input
+      type="url"
+      name="sourceUrl"
+      placeholder="Source article URL"
+      class="admin-input"
+      value="${source?.url ?? ''}"
+    />
+    <input
+      type="text"
+      name="sourceTitle"
+      placeholder="Source article title"
+      class="admin-input"
+      value="${source?.title ?? ''}"
+    />
+  </div>`
+}
+
+function sourceFieldsScript() {
+  return html`<script>
+    (function () {
+      const section = document.querySelector('select[name="section"]')
+      const box = document.querySelector('.admin-source-fields')
+      if (!section || !box) return
+      const url = box.querySelector('input[name="sourceUrl"]')
+      const title = box.querySelector('input[name="sourceTitle"]')
+      function sync() {
+        const show = section.value === 'reflections'
+        box.hidden = !show
+        if (url) url.required = show
+        if (title) title.required = show
+      }
+      section.addEventListener('change', sync)
+      sync()
+    })()
+  </script>`
+}
 
 interface PostItem {
   slug: string
@@ -36,6 +88,8 @@ export function renderAdminPage(posts: PostItem[], error?: string) {
         value="${today}"
         required
       />
+      ${renderSectionSelect()}
+      ${renderSourceFields()}
       <input
         type="text"
         name="description"
@@ -55,6 +109,7 @@ export function renderAdminPage(posts: PostItem[], error?: string) {
         <a href="/" class="admin-link">Cancel</a>
       </div>
     </form>
+    ${sourceFieldsScript()}
     <script>
       (function () {
         const input = document.querySelector('input[name="cover"]')
@@ -101,7 +156,15 @@ export function renderAdminPage(posts: PostItem[], error?: string) {
 }
 
 export function renderEditForm(
-  post: { slug: string; title: string; content: string; createdAt: Date },
+  post: {
+    slug: string
+    title: string
+    content: string
+    createdAt: Date
+    section: PostSection
+    sourceUrl?: string
+    sourceTitle?: string
+  },
   mediaFiles: MediaFile[] = [],
   mediaError?: string,
 ) {
@@ -125,6 +188,8 @@ export function renderEditForm(
         value="${dateStr}"
         required
       />
+      ${renderSectionSelect(post.section)}
+      ${renderSourceFields({ url: post.sourceUrl, title: post.sourceTitle })}
       <textarea
         name="content"
         placeholder="Markdown content..."
@@ -138,6 +203,7 @@ export function renderEditForm(
         <a href="/admin" class="admin-link">Cancel</a>
       </div>
     </form>
+    ${sourceFieldsScript()}
     ${renderMediaSection({ slug: post.slug }, mediaFiles, mediaError)}
     <script>
       (function () {
@@ -147,6 +213,9 @@ export function renderEditForm(
         const KEY = 'draft:post:' + slug
         const title = form.elements.title
         const date = form.elements.date
+        const section = form.elements.section
+        const sourceUrl = form.elements.sourceUrl
+        const sourceTitle = form.elements.sourceTitle
         const content = form.elements.content
         let timer
 
@@ -154,6 +223,9 @@ export function renderEditForm(
           localStorage.setItem(KEY, JSON.stringify({
             title: title.value,
             date: date.value,
+            section: section.value,
+            sourceUrl: sourceUrl && sourceUrl.value,
+            sourceTitle: sourceTitle && sourceTitle.value,
             content: content.value,
             savedAt: Date.now(),
           }))
@@ -170,6 +242,10 @@ export function renderEditForm(
             const draft = JSON.parse(raw)
             title.value = draft.title || title.value
             date.value = draft.date || date.value
+            if (draft.section) section.value = draft.section
+            if (sourceUrl && draft.sourceUrl) sourceUrl.value = draft.sourceUrl
+            if (sourceTitle && draft.sourceTitle) sourceTitle.value = draft.sourceTitle
+            section.dispatchEvent(new Event('change'))
             content.value = draft.content || content.value
             const bar = document.createElement('div')
             bar.className = 'admin-draft-bar'

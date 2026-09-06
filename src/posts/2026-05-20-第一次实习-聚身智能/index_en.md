@@ -1,7 +1,7 @@
-My first internship was incredibly dramatic...
+My First Internship Was Quite Surreal
 <div align="center">
 
-![Nostalgic for my ultra-wide curved monitor](./media/9581787024675_-pic.jpg)
+![Missing my ultra-wide curved monitor](./media/9581787024675_-pic.jpg "width=50%")
 
 </div>
 At first, I just wanted to explore the current job market with my girlfriend. With school keeping me busy, I thought I'd try my luck to see if I could find an internship that wasn't too strict about on-site attendance or allowed remote work.

@@ -2,5 +2,6 @@
     "title": "New Post",
     "date": "YYYY-MM-DD",
     "description": "",
-    "published": true
+    "published": true,
+    "section": "musings"
 }

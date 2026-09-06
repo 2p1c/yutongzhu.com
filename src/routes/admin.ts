@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { getAllPostListItems, getPostBySlug, createPost, updatePost, getMediaFiles, saveMediaFile, deleteMediaFile, validateMediaFile } from '../lib/post-storage.js'
+import { getAllPostListItems, getPostBySlug, createPost, updatePost, getMediaFiles, saveMediaFile, deleteMediaFile, validateMediaFile, normalizeSection, parseSource } from '../lib/post-storage.js'
 import { authGuard } from '../lib/auth.js'
 import { translateAndSave } from '../lib/model.js'
 import { renderLayout } from '../views/layout.js'
@@ -37,8 +37,10 @@ admin.post('/admin/edit/:slug', authGuard, async (c) => {
   const content = body.content as string
   const date = body.date as string | undefined
   const published = body.published === 'true'
+  const section = normalizeSection(body.section)
+  const source = parseSource(body.sourceUrl, body.sourceTitle)
   const previous = await getPostBySlug(slug)
-  const updated = await updatePost(slug, title, content, date, published)
+  const updated = await updatePost(slug, title, content, date, published, section, source)
   await translateAndSave(updated.slug, title, content, previous)
   return c.redirect('/admin')
 })
@@ -48,6 +50,8 @@ admin.post('/admin/posts', authGuard, async (c) => {
   const title = body.title as string
   const description = ((body.description as string) ?? '').trim() || title
   const date = body.date as string | undefined
+  const section = normalizeSection(body.section)
+  const source = parseSource(body.sourceUrl, body.sourceTitle)
 
   // Optional cover image: validate before creating the post so a bad upload
   // never leaves behind an empty post directory.
@@ -74,7 +78,7 @@ admin.post('/admin/posts', authGuard, async (c) => {
 
   // New posts start as drafts so empty content never leaks to the public site;
   // the author publishes from the edit page once content is ready.
-  const post = await createPost(title, '', date, false)
+  const post = await createPost(title, '', date, false, section, source)
 
   if (coverFile) {
     const buffer = await coverFile.arrayBuffer()

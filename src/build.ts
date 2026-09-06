@@ -34,6 +34,10 @@ async function buildPosts(): Promise<void> {
       contentHtml,
       contentHtmlEn,
       createdAt: post.createdAt,
+      source:
+        post.section === 'reflections' && post.sourceUrl && post.sourceTitle
+          ? { url: post.sourceUrl, title: post.sourceTitle }
+          : undefined,
     })
     const html = renderLayout({ title: post.title, content: body })
 
