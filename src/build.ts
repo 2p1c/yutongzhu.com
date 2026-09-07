@@ -1,7 +1,7 @@
 import { writeFile, mkdir, cp, readdir, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import { existsSync } from 'node:fs'
-import { getAllPostListItems, getPostBySlug } from './lib/post-storage.js'
+import { getAllPostListItems, getPostBySlug, visiblePostSource } from './lib/post-storage.js'
 import { renderMarkdown } from './lib/markdown.js'
 import { renderLayout } from './views/layout.js'
 import { renderHomeBody } from './views/home.js'
@@ -34,10 +34,7 @@ async function buildPosts(): Promise<void> {
       contentHtml,
       contentHtmlEn,
       createdAt: post.createdAt,
-      source:
-        post.section === 'reflections' && post.sourceUrl && post.sourceTitle
-          ? { url: post.sourceUrl, title: post.sourceTitle }
-          : undefined,
+      source: visiblePostSource(post),
     })
     const html = renderLayout({ title: post.title, content: body })
 

@@ -19,7 +19,7 @@ const ALLOWED_VIDEO_MIME = new Set([
 ])
 const MAX_FILE_SIZE = 50 * 1024 * 1024 // 50 MB
 
-export type PostSection = 'musings' | 'reflections'
+export type PostSection = 'musings' | 'reflections' | 'notes'
 
 export interface PostSource {
   url: string
@@ -27,7 +27,17 @@ export interface PostSource {
 }
 
 export function normalizeSection(value: unknown): PostSection {
-  return value === 'reflections' ? 'reflections' : 'musings'
+  if (value === 'reflections' || value === 'notes') return value
+  return 'musings'
+}
+
+export function visiblePostSource(post: {
+  section: PostSection
+  sourceUrl?: string
+  sourceTitle?: string
+}): PostSource | undefined {
+  if (post.section === 'musings' || !post.sourceUrl || !post.sourceTitle) return undefined
+  return { url: post.sourceUrl, title: post.sourceTitle }
 }
 
 export function parseSource(url: unknown, title: unknown): PostSource | undefined {
@@ -225,7 +235,7 @@ export async function createPost(
     published,
     section: normalizeSection(section),
   }
-  applySource(meta, source)
+  applySource(meta, normalizeSection(section) === 'musings' ? undefined : source)
 
   await writeFile(join(dir, 'meta.json'), JSON.stringify(meta, null, 4) + '\n', 'utf-8')
   await writeFile(join(dir, 'index.md'), content, 'utf-8')
@@ -269,21 +279,25 @@ export async function updatePost(
     dateValue = existing.createdAt.toISOString().split('T')[0]
   }
 
+  const nextSection = section ? normalizeSection(section) : existing.section
   const meta: PostMeta = {
     title,
     titleEn: existing.titleEn,
     date: dateValue,
     description: existing.description ?? '',
     published: published ?? existing.published,
-    section: section ? normalizeSection(section) : existing.section,
+    section: nextSection,
   }
-  applySource(
-    meta,
-    source ??
-      (existing.sourceUrl && existing.sourceTitle
-        ? { url: existing.sourceUrl, title: existing.sourceTitle }
-        : undefined),
-  )
+  const nextSource =
+    nextSection === 'musings'
+      ? undefined
+      : section !== undefined
+        ? source
+        : source ??
+          (existing.sourceUrl && existing.sourceTitle
+            ? { url: existing.sourceUrl, title: existing.sourceTitle }
+            : undefined)
+  applySource(meta, nextSource)
 
   const dir = join(POSTS_DIR, newSlug)
   await writeFile(join(dir, 'meta.json'), JSON.stringify(meta, null, 4) + '\n', 'utf-8')

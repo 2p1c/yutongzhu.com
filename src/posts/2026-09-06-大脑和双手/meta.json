@@ -2,7 +2,7 @@
     "title": "大脑和双手",
     "date": "2026-09-06",
     "description": "",
-    "published": true,
+    "published": false,
     "section": "reflections",
     "sourceUrl": "https://www.anthropic.com/engineering/building-effective-agents",
     "sourceTitle": "Scaling Managed Agents: Decoupling the brain from the hands"
