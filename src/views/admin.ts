@@ -1,16 +1,18 @@
 import { html } from 'hono/html'
 import type { MediaFile, PostSection } from '../lib/post-storage.js'
 
-function renderSectionSelect(selected: PostSection = 'musings') {
-  if (selected === 'reflections') {
-    return html`<select name="section" class="admin-input" required>
-      <option value="musings">Musings</option>
-      <option value="reflections" selected>Reflections</option>
-    </select>`
+function sectionOption(value: PostSection, label: string, selected: PostSection) {
+  if (value === selected) {
+    return html`<option value="${value}" selected>${label}</option>`
   }
+  return html`<option value="${value}">${label}</option>`
+}
+
+function renderSectionSelect(selected: PostSection = 'musings') {
   return html`<select name="section" class="admin-input" required>
-    <option value="musings" selected>Musings</option>
-    <option value="reflections">Reflections</option>
+    ${sectionOption('musings', 'Musings', selected)}
+    ${sectionOption('reflections', 'Reflections', selected)}
+    ${sectionOption('notes', 'Notes', selected)}
   </select>`
 }
 
@@ -42,10 +44,11 @@ function sourceFieldsScript() {
       const url = box.querySelector('input[name="sourceUrl"]')
       const title = box.querySelector('input[name="sourceTitle"]')
       function sync() {
-        const show = section.value === 'reflections'
+        const show = section.value === 'reflections' || section.value === 'notes'
+        const required = section.value === 'reflections'
         box.hidden = !show
-        if (url) url.required = show
-        if (title) title.required = show
+        if (url) url.required = required
+        if (title) title.required = required
       }
       section.addEventListener('change', sync)
       sync()

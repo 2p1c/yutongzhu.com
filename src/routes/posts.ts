@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { getAllPosts, getPostBySlug, createPost } from '../lib/post-storage.js'
+import { getAllPosts, getPostBySlug, createPost, visiblePostSource } from '../lib/post-storage.js'
 import { renderMarkdown } from '../lib/markdown.js'
 import { renderLayout } from '../views/layout.js'
 import { renderPostBody } from '../views/post.js'
@@ -22,10 +22,7 @@ async function servePost(c: any, slug: string) {
       contentHtml,
       contentHtmlEn,
       createdAt: post.createdAt,
-      source:
-        post.section === 'reflections' && post.sourceUrl && post.sourceTitle
-          ? { url: post.sourceUrl, title: post.sourceTitle }
-          : undefined,
+      source: visiblePostSource(post),
     })
   }))
 }

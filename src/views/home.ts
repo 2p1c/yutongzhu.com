@@ -28,8 +28,9 @@ function renderPostList(posts: PostListItem[], showSource = false) {
 }
 
 export function renderHomeBody(posts: PostListItem[]) {
-  const musings = posts.filter(p => p.section !== 'reflections')
+  const musings = posts.filter(p => p.section === 'musings')
   const reflections = posts.filter(p => p.section === 'reflections')
+  const notes = posts.filter(p => p.section === 'notes')
   return html`<section>
     <h2>Musings</h2>
     ${renderPostList(musings)}
@@ -38,6 +39,11 @@ export function renderHomeBody(posts: PostListItem[]) {
   <section>
     <h2>Reflections</h2>
     ${renderPostList(reflections, true)}
+  </section>
+
+  <section>
+    <h2>Notes</h2>
+    ${renderPostList(notes, true)}
   </section>
 
   <section class="bio">
