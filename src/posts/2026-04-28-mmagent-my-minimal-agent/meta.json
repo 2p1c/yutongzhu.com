@@ -1,7 +1,8 @@
 {
     "title": "mmagent(my-minimal-agent)",
     "titleEn": "mmagent(my-minimal-agent)",
-    "date": "2026-04-28",
+    "date": "2026-06-17",
     "description": "",
-    "published": true
+    "published": true,
+    "section": "musings"
 }

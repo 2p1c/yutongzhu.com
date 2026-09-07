@@ -43,4 +43,4 @@ As I understand it, a RAG library is a collection of sentence information (or se
 
 </div>
 
-So how should we split sentences and convert them into RAG vectors? I think splitting needs to take into account semantic completeness, structure, and the capabilities of the embedding model.
+So how should we split paragraphs and convert them into RAG vectors (also converting them into tokens first)? I think splitting should take into account semantic completeness, structure, and the capabilities of the embedding model. There are two strategies we can choose from: the chunking strategy (splitting the entire article into different paragraphs) and the tokenizer strategy (splitting a paragraph into the smallest semantic units, involving compression and generalization).
