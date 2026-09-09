@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { getAllPostListItems, getPostBySlug, createPost, updatePost, getMediaFiles, saveMediaFile, deleteMediaFile, validateMediaFile, normalizeSection, parseSource } from '../lib/post-storage.js'
+import { getAllPostListItems, getPostBySlug, createPost, updatePost, getMediaFiles, saveMediaFile, deleteMediaFile, validateMediaFile, mediaEmbedMarkdown, normalizeSection, parseSource } from '../lib/post-storage.js'
 import { authGuard } from '../lib/auth.js'
 import { translateAndSave } from '../lib/model.js'
 import { renderLayout } from '../views/layout.js'
@@ -83,7 +83,7 @@ admin.post('/admin/posts', authGuard, async (c) => {
   if (coverFile) {
     const buffer = await coverFile.arrayBuffer()
     const saved = await saveMediaFile(post.slug, { ...coverFile, buffer })
-    const content = `<div align="center">\n\n![${description}](./media/${saved.name})\n\n</div>\n`
+    const content = mediaEmbedMarkdown(saved, description) + '\n'
     await updatePost(post.slug, title, content)
     await translateAndSave(post.slug, title, content)
   }
@@ -95,12 +95,14 @@ admin.post('/admin/edit/:slug/media', authGuard, async (c) => {
   const slug = c.req.param('slug')!
   const body = await c.req.parseBody()
   const raw = body.media
+  const wantsJson = (c.req.header('Accept') ?? '').includes('application/json')
 
   // parseBody may return a single File or an array of Files
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const entries: any[] = raw ? (Array.isArray(raw) ? raw : [raw]) : []
 
   if (entries.length === 0) {
+    if (wantsJson) return c.json({ error: 'No files selected' }, 400)
     return c.redirect(`/admin/edit/${slug}?error=${encodeURIComponent('No files selected')}`)
   }
 
@@ -117,13 +119,25 @@ admin.post('/admin/edit/:slug/media', authGuard, async (c) => {
   for (const file of files) {
     const validation = validateMediaFile(file)
     if (!validation.ok) {
+      if (wantsJson) return c.json({ error: validation.error }, 400)
       return c.redirect(`/admin/edit/${slug}?error=${encodeURIComponent(validation.error)}`)
     }
   }
 
+  const saved = []
   for (const file of files) {
     const buffer = await file.arrayBuffer()
-    await saveMediaFile(slug, { ...file, buffer })
+    saved.push(await saveMediaFile(slug, { ...file, buffer }))
+  }
+
+  if (wantsJson) {
+    return c.json({
+      files: saved.map((f) => ({
+        name: f.name,
+        kind: f.kind,
+        markdown: mediaEmbedMarkdown(f),
+      })),
+    })
   }
 
   return c.redirect(`/admin/edit/${slug}`)

@@ -69,4 +69,16 @@ describe('renderMarkdown', () => {
     expect(result).toContain('<p>')
     expect(result).toContain('A paragraph.')
   })
+
+  it('passes through video and pdf html embeds', () => {
+    const video = renderMarkdown('<video controls src="./media/a.mp4"></video>')
+    expect(video).toContain('<video controls src="./media/a.mp4"></video>')
+
+    const pdf = renderMarkdown(
+      '<figure class="post-figure"><iframe class="post-pdf" src="./media/a.pdf" title="hello"></iframe><figcaption class="post-figcaption">hello</figcaption></figure>',
+    )
+    expect(pdf).toContain('class="post-pdf"')
+    expect(pdf).toContain('./media/a.pdf')
+    expect(pdf).toContain('<figcaption class="post-figcaption">hello</figcaption>')
+  })
 })

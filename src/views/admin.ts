@@ -96,17 +96,17 @@ export function renderAdminPage(posts: PostItem[], error?: string) {
       <input
         type="text"
         name="description"
-        placeholder="Cover image description (alt text, optional)"
+        placeholder="Cover description (alt text / title, optional)"
         class="admin-input"
       />
       <input
         type="file"
         name="cover"
-        accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml"
+        accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml,application/pdf,video/mp4,video/webm,video/quicktime"
         class="admin-file-input"
       />
       <img id="cover-preview" class="admin-cover-preview" alt="" hidden />
-      <p class="admin-media-hint">Cover image is optional. Click to choose, or paste from clipboard (PNG, JPG, GIF, WebP, SVG)</p>
+      <p class="admin-media-hint">Optional cover: image, PDF, or video (MP4, WebM, MOV). It is placed at the start of the post. Click to choose, or paste an image from the clipboard.</p>
       <div class="admin-actions">
         <button type="submit" class="admin-btn">Create</button>
         <a href="/" class="admin-link">Cancel</a>
@@ -303,6 +303,7 @@ function renderMediaSection(
 ) {
   const allowedAccept = [
     'image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml',
+    'application/pdf',
     'video/mp4', 'video/webm', 'video/quicktime',
   ].join(',')
 
@@ -334,7 +335,7 @@ function renderMediaSection(
         />
         <button type="submit" class="admin-btn admin-btn-small">Upload</button>
       </div>
-      <p class="admin-media-hint">PNG, JPG, GIF, WebP, SVG, MP4, WebM, MOV &mdash; max 50 MB. Paste an image into the article to upload and insert it.</p>
+      <p class="admin-media-hint">PNG, JPG, GIF, WebP, SVG, PDF, MP4, WebM, MOV &mdash; max 50 MB. Paste an image, or drop a file onto the article, to upload and insert it at the cursor.</p>
     </form>
     <script>
       (function () {
@@ -348,10 +349,20 @@ function renderMediaSection(
           'image/gif': '.gif',
           'image/webp': '.webp',
           'image/svg+xml': '.svg',
+          'application/pdf': '.pdf',
+          'video/mp4': '.mp4',
+          'video/webm': '.webm',
+          'video/quicktime': '.mov',
+        }
+
+        function isAllowed(file) {
+          if (EXT[file.type]) return true
+          return /\\.(png|jpe?g|gif|webp|svg|pdf|mp4|webm|mov)$/i.test(file.name)
         }
 
         function namedFile(file, i) {
-          const ext = EXT[file.type] || '.png'
+          const ext = EXT[file.type] || ''
+          if (!ext) return file
           return new File([file], 'paste-' + Date.now() + '-' + i + ext, { type: file.type })
         }
 
@@ -370,6 +381,28 @@ function renderMediaSection(
           textarea.dispatchEvent(new Event('input', { bubbles: true }))
         }
 
+        function uploadAndInsert(files) {
+          const allowed = files.filter(isAllowed)
+          if (allowed.length === 0) return
+          const fd = new FormData()
+          allowed.forEach(function (file) { fd.append('media', file) })
+          const token = form.querySelector('input[name="token"]')
+          if (token) fd.append('token', token.value)
+          fetch(form.action, {
+            method: 'POST',
+            body: fd,
+            headers: { Accept: 'application/json' },
+          }).then(function (res) {
+            if (!res.ok) return
+            return res.json()
+          }).then(function (data) {
+            if (!data || !data.files) return
+            data.files.forEach(function (f) {
+              if (f.markdown) insertAtCursor(f.markdown)
+            })
+          })
+        }
+
         document.addEventListener('paste', function (e) {
           const items = e.clipboardData && e.clipboardData.items
           if (!items) return
@@ -377,22 +410,29 @@ function renderMediaSection(
           for (let i = 0; i < items.length; i++) {
             if (items[i].type.indexOf('image/') !== 0) continue
             const file = items[i].getAsFile()
-            if (file) files.push(file)
+            if (file) files.push(namedFile(file, i))
           }
           if (files.length === 0) return
           e.preventDefault()
+          uploadAndInsert(files)
+        })
 
-          files.forEach(function (raw, i) {
-            const file = namedFile(raw, i)
-            const fd = new FormData()
-            fd.append('media', file)
-            const token = form.querySelector('input[name="token"]')
-            if (token) fd.append('token', token.value)
-            fetch(form.action, { method: 'POST', body: fd }).then(function (res) {
-              if (!res.ok || res.url.indexOf('error=') !== -1) return
-              insertAtCursor('<div align="center">\\n\\n![图片描述](./media/' + file.name + ')\\n\\n</div>')
-            })
-          })
+        textarea.addEventListener('dragover', function (e) {
+          if (!e.dataTransfer || Array.prototype.indexOf.call(e.dataTransfer.types, 'Files') === -1) return
+          e.preventDefault()
+          textarea.classList.add('is-dragover')
+        })
+        textarea.addEventListener('dragleave', function () {
+          textarea.classList.remove('is-dragover')
+        })
+        textarea.addEventListener('drop', function (e) {
+          textarea.classList.remove('is-dragover')
+          const dropped = e.dataTransfer && e.dataTransfer.files
+          if (!dropped || dropped.length === 0) return
+          const files = Array.prototype.slice.call(dropped).filter(isAllowed)
+          if (files.length === 0) return
+          e.preventDefault()
+          uploadAndInsert(files)
         })
       })()
     </script>
@@ -404,7 +444,7 @@ function renderMediaSection(
             <span class="admin-media-preview">
               ${f.kind === 'image'
                 ? html`<img src="${f.url}" alt="${f.name}" width="80" height="60" loading="lazy" />`
-                : html`<span class="admin-media-badge">${f.kind === 'video' ? 'VID' : '?'}</span>`}
+                : html`<span class="admin-media-badge">${f.kind === 'video' ? 'VID' : f.kind === 'pdf' ? 'PDF' : '?'}</span>`}
             </span>
             <span class="admin-media-info">
               <span class="admin-media-name">${f.name}</span>

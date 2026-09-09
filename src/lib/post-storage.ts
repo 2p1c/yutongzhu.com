@@ -17,6 +17,7 @@ const ALLOWED_VIDEO_MIME = new Set([
   'video/webm',
   'video/quicktime',
 ])
+const ALLOWED_PDF_MIME = new Set(['application/pdf'])
 const MAX_FILE_SIZE = 50 * 1024 * 1024 // 50 MB
 
 export type PostSection = 'musings' | 'reflections' | 'notes'
@@ -93,7 +94,7 @@ export interface MediaFile {
   name: string
   size: number
   mimeType: string
-  kind: 'image' | 'video' | 'other'
+  kind: 'image' | 'video' | 'pdf' | 'other'
   url: string // relative URL, e.g., /posts/<slug>/media/<name>
 }
 
@@ -323,6 +324,7 @@ export async function saveTranslation(
 function classifyKind(mimeType: string): MediaFile['kind'] {
   if (ALLOWED_IMAGE_MIME.has(mimeType)) return 'image'
   if (ALLOWED_VIDEO_MIME.has(mimeType)) return 'video'
+  if (ALLOWED_PDF_MIME.has(mimeType)) return 'pdf'
   return 'other'
 }
 
@@ -338,8 +340,42 @@ function guessMime(name: string): string {
     '.mp4': 'video/mp4',
     '.webm': 'video/webm',
     '.mov': 'video/quicktime',
+    '.pdf': 'application/pdf',
   }
   return map[ext] ?? 'application/octet-stream'
+}
+
+function isAllowedMime(mimeType: string): boolean {
+  return (
+    ALLOWED_IMAGE_MIME.has(mimeType) ||
+    ALLOWED_VIDEO_MIME.has(mimeType) ||
+    ALLOWED_PDF_MIME.has(mimeType)
+  )
+}
+
+function resolveMime(file: { name: string; type: string }): string {
+  if (isAllowedMime(file.type)) return file.type
+  return guessMime(file.name)
+}
+
+export function mediaEmbedMarkdown(
+  file: { name: string; kind: MediaFile['kind'] },
+  alt = '',
+): string {
+  const src = `./media/${file.name}`
+  const caption = alt.trim()
+  if (file.kind === 'image') {
+    const text = caption || '图片描述'
+    return `<div align="center">\n\n![${text}](${src})\n\n</div>`
+  }
+  if (file.kind === 'video') {
+    return `<div align="center">\n\n<video controls src="${src}"></video>\n\n</div>`
+  }
+  if (file.kind === 'pdf') {
+    const text = caption || '图片描述'
+    return `<div align="center">\n\n<figure class="post-figure"><iframe class="post-pdf" src="${src}" title="${text}"></iframe><figcaption class="post-figcaption">${text}</figcaption></figure>\n\n</div>`
+  }
+  return `[${file.name}](${src})`
 }
 
 export function sanitizeFilename(raw: string): string {
@@ -365,11 +401,9 @@ export function validateMediaFile(
       error: `File "${file.name}" exceeds ${MAX_FILE_SIZE / 1024 / 1024} MB limit`,
     }
   }
-  if (
-    !ALLOWED_IMAGE_MIME.has(file.type) &&
-    !ALLOWED_VIDEO_MIME.has(file.type)
-  ) {
-    return { ok: false, error: `File type "${file.type}" is not allowed` }
+  const mimeType = resolveMime(file)
+  if (!isAllowedMime(mimeType)) {
+    return { ok: false, error: `File type "${file.type || mimeType}" is not allowed` }
   }
   const name = file.name.replace(/\\/g, '/')
   if (name.includes('/') || name.includes('..')) {
@@ -414,11 +448,12 @@ export async function saveMediaFile(
   const safeName = sanitizeFilename(file.name)
   const dest = join(dir, safeName)
   await writeFile(dest, Buffer.from(file.buffer))
+  const mimeType = resolveMime(file)
   return {
     name: safeName,
     size: file.size,
-    mimeType: file.type,
-    kind: classifyKind(file.type),
+    mimeType,
+    kind: classifyKind(mimeType),
     url: `/posts/${slug}/media/${safeName}`,
   }
 }
@@ -486,11 +521,12 @@ export async function saveTempMediaFile(
   const safeName = sanitizeFilename(file.name)
   const dest = join(dir, safeName)
   await writeFile(dest, Buffer.from(file.buffer))
+  const mimeType = resolveMime(file)
   return {
     name: safeName,
     size: file.size,
-    mimeType: file.type,
-    kind: classifyKind(file.type),
+    mimeType,
+    kind: classifyKind(mimeType),
     url: `/posts/_uploads/${token}/${safeName}`,
   }
 }
