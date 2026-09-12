@@ -4,6 +4,12 @@
 
 </div>
 
+### Part 0
+
+This section covers the evolution from the original HTML web page execution process (sending an HTTP request to the server, the server handling the POST request and returning a 302 status code, which in turn requires the browser to redirect by making an HTTP GET request to the Location and then retrieve HTML, CSS, JS...) to today's full-stack development, where JavaScript programs run in the browser without further HTTP requests.
+
+What exactly does full-stack development mean? A web service often consists of a frontend—the part closest to the user—at the top layer; it also includes a backend, a service on the server that listens for requests from the frontend and provides specific functionality; and there is often a database beneath the backend. This forms a three-layer stack, which is what we call full stack. The emergence of JavaScript has made it possible to develop the full stack using the same programming language, taking development into a new dimension.
+
 ### The React journey begins
 
 In React, we don't write code in the index file. More precisely, the `index.html` file doesn't contain any HTML markup visible in the browser. Everything that needs to be rendered is defined as **React components** — it is quite accurate to describe **components** as UI building blocks.

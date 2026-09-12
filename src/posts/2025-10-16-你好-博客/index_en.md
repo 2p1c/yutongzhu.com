@@ -1,0 +1,11 @@
+<div align="center">
+
+![How should we start](./media/header.png)
+
+</div>
+
+This is my first blog post, and I don't know what I want to use it to record. The style of this website is almost copied from [Mario Zechner](https://mariozechner.at/)'s site, because the first time I happened to open his website and read his articles, I was captivated—at the time it was because I saw his PI project. On his site, he narrates the process of developing projects and some reflections in a very logical, fluid way; to me, that website is like a work of art.
+
+I have a certain degree of OCD at times, and as you know, bro, code written with certain tools always makes you want to tear your hair out. Mario's website is public on GitHub; it's just plain HTML pages, almost entirely static assets. Maybe that's why it feels so clean, and refreshing doesn't flicker. I did roughly the same, though my original intention was to practice full-stack development. But I also didn't want to reinvent the wheel, so I used the Hono framework, wrote APIs for adding, deleting, and updating blog posts, and used a Markdown parsing library to render them. I can add more features gradually later.
+
+A personal website feels like a kind of old-school internet technology. My first impression of it came from *The Social Network*, where Zuckerberg writes a blog to badmouth his ex-girlfriend. That movie had a huge influence on me, and it's still the best biopic I've ever seen. Zuckerberg is a genius, and so he is in real life; much of the research Meta is doing is very meaningful and tasteful. I'm not a computer science student (though one's major is a deceptive thing anyway), but that doesn't stop me from learning about things I'm interested in—and maybe someday I could even make it my career. I want to record as much as possible, share the projects I work on, some thoughts, or books I've read. The internet, as I understand it, is like what [Mozilla](https://www.mozilla.org/zh-CN/?utm_source=firefox-browser&utm_medium=firefox-desktop&utm_campaign=about-dialog) says: keep it public, open, and available to everyone; anyone can share and access it, with no borders or barriers.
