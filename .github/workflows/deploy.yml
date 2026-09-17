@@ -20,5 +20,8 @@ jobs:
             GIT_SSH_COMMAND='ssh -i ~/.ssh/id_ed25519_yutongzhu -o StrictHostKeyChecking=no' git pull origin main
             npm install --silent
             npm run build
+            cp deploy/nginx.conf /etc/nginx/sites-available/yutongzhu.site
+            nginx -t
+            systemctl reload nginx
             systemctl restart yutongzhu
             echo "Deploy OK"

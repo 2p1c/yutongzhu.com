@@ -2,10 +2,21 @@ import { Hono } from 'hono'
 import { getAllPostListItems, getPostBySlug, createPost, updatePost, getMediaFiles, saveMediaFile, deleteMediaFile, validateMediaFile, mediaEmbedMarkdown, normalizeSection, parseSource } from '../lib/post-storage.js'
 import { authGuard } from '../lib/auth.js'
 import { translateAndSave } from '../lib/model.js'
+import { buildSite } from '../lib/site-build.js'
 import { renderLayout } from '../views/layout.js'
 import { renderAdminPage, renderEditForm } from '../views/admin.js'
 
 const admin = new Hono()
+
+async function rebuildPublicSite(): Promise<string | undefined> {
+  try {
+    await buildSite()
+    return undefined
+  } catch (err) {
+    console.error('Failed to rebuild public site', err)
+    return 'Saved, but static rebuild failed'
+  }
+}
 
 admin.get('/admin', authGuard, async (c) => {
   const posts = await getAllPostListItems({ includeUnpublished: true })
@@ -42,6 +53,10 @@ admin.post('/admin/edit/:slug', authGuard, async (c) => {
   const previous = await getPostBySlug(slug)
   const updated = await updatePost(slug, title, content, date, published, section, source)
   await translateAndSave(updated.slug, title, content, previous)
+  const rebuildError = await rebuildPublicSite()
+  if (rebuildError) {
+    return c.redirect(`/admin?error=${encodeURIComponent(rebuildError)}`)
+  }
   return c.redirect('/admin')
 })
 
@@ -88,6 +103,10 @@ admin.post('/admin/posts', authGuard, async (c) => {
     await translateAndSave(post.slug, title, content)
   }
 
+  const rebuildError = await rebuildPublicSite()
+  if (rebuildError) {
+    return c.redirect(`/admin/edit/${post.slug}?error=${encodeURIComponent(rebuildError)}`)
+  }
   return c.redirect(`/admin/edit/${post.slug}`)
 })
 
@@ -130,6 +149,8 @@ admin.post('/admin/edit/:slug/media', authGuard, async (c) => {
     saved.push(await saveMediaFile(slug, { ...file, buffer }))
   }
 
+  const rebuildError = await rebuildPublicSite()
+
   if (wantsJson) {
     return c.json({
       files: saved.map((f) => ({
@@ -140,6 +161,9 @@ admin.post('/admin/edit/:slug/media', authGuard, async (c) => {
     })
   }
 
+  if (rebuildError) {
+    return c.redirect(`/admin/edit/${slug}?error=${encodeURIComponent(rebuildError)}`)
+  }
   return c.redirect(`/admin/edit/${slug}`)
 })
 
@@ -153,7 +177,11 @@ admin.post('/admin/edit/:slug/media/delete', authGuard, async (c) => {
   }
 
   const ok = await deleteMediaFile(slug, filename)
-  const query = ok ? '' : `?error=${encodeURIComponent('Failed to delete file')}`
+  if (!ok) {
+    return c.redirect(`/admin/edit/${slug}?error=${encodeURIComponent('Failed to delete file')}`)
+  }
+  const rebuildError = await rebuildPublicSite()
+  const query = rebuildError ? `?error=${encodeURIComponent(rebuildError)}` : ''
   return c.redirect(`/admin/edit/${slug}${query}`)
 })
 

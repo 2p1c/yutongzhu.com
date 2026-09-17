@@ -1,0 +1,15 @@
+[Unit]
+Description=yutongzhu.com admin (proxied by nginx)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/yutongzhu.com
+Environment=NODE_ENV=production
+EnvironmentFile=-/opt/yutongzhu.com/.env
+ExecStart=/usr/bin/npm start
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
