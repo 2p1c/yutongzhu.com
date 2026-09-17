@@ -10,13 +10,21 @@ export interface Model {
   model: string
 }
 
-const model: Model = {
-  baseUrl: process.env.TRANSLATE_BASE_URL ?? '',
-  apiKey: process.env.TRANSLATE_API_KEY ?? '',
-  model: process.env.TRANSLATE_MODEL ?? '',
+function getModel(): Model {
+  return {
+    baseUrl: process.env.TRANSLATE_BASE_URL ?? '',
+    apiKey: process.env.TRANSLATE_API_KEY ?? '',
+    model: process.env.TRANSLATE_MODEL ?? '',
+  }
 }
 
-const client = new OpenAI({ baseURL: model.baseUrl, apiKey: model.apiKey })
+function getClient(): OpenAI {
+  const cfg = getModel()
+  return new OpenAI({
+    baseURL: cfg.baseUrl || undefined,
+    apiKey: cfg.apiKey,
+  })
+}
 
 // 翻译系统提示词（即「Agent 接口」）。json_object 模式要求提示词里出现「JSON」字样，已满足。
 const SYSTEM_PROMPT = `你是一名翻译专家，负责把中文 Markdown 博文翻译成自然、地道的英文。翻译需达到「信达雅」标准：「信」即忠实于原文的内容与意图；「达」即译文通顺易懂、表达清晰；「雅」即追求译文的文化审美和语言优美。目标是创作出既忠于原作精神、又符合目标语言文化和读者审美的译文，可调整语气和风格，并考虑某些词语的文化内涵和地区差异。
@@ -37,8 +45,9 @@ async function translatePost(
   title: string,
   content: string,
 ): Promise<{ titleEn: string; contentEn: string }> {
-  const completion = await client.chat.completions.create({
-    model: model.model,
+  const cfg = getModel()
+  const completion = await getClient().chat.completions.create({
+    model: cfg.model,
     messages: [
       { role: 'system', content: SYSTEM_PROMPT },
       { role: 'user', content: `标题：\n${title}\n\n正文：\n${content}` },
@@ -66,8 +75,9 @@ async function translateParagraphs(
     `${ctx}请按顺序把以下段落翻译成英文，保持 Markdown 结构、代码块、URL、图片语法原样：\n${paragraphs
       .map((p, i) => `[T${i + 1}] ${p}`)
       .join('\n\n')}\n\n只输出 JSON：{"translations": ["...", "..."]}`
-  const completion = await client.chat.completions.create({
-    model: model.model,
+  const cfg = getModel()
+  const completion = await getClient().chat.completions.create({
+    model: cfg.model,
     messages: [
       { role: 'system', content: SYSTEM_PROMPT },
       { role: 'user', content: userContent },
@@ -85,6 +95,11 @@ export async function translateAndSave(
   content: string,
   previous?: Post | null,
 ): Promise<void> {
+  if (!getModel().apiKey) {
+    console.warn('Skipping translation: TRANSLATE_API_KEY is not set')
+    return
+  }
+
   // `previous` is the post's state BEFORE the content was written to disk.
   // Without it, getPostBySlug would read the already-overwritten content, so the
   // reuse map below would compare new paragraphs against themselves and skip translation.
