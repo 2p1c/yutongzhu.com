@@ -56,7 +56,8 @@ marked.use({
           titleAttr = ` title="${title}"`
         }
       }
-      const img = `<img src="${href}" alt="${text}"${widthAttr}${titleAttr} />`
+      // lazy：屏幕外的图不和首屏抢带宽；另一种语言的正文是 display:none，里面的图也不会下载。
+      const img = `<img src="${href}" alt="${text}"${widthAttr}${titleAttr} loading="lazy" decoding="async" />`
       if (text) {
         return `<figure class="post-figure">${img}<figcaption class="post-figcaption">${text}</figcaption></figure>`
       }
@@ -68,6 +69,25 @@ marked.use({
   },
 })
 
+// 高亮是同步的，会占住事件循环。同一份正文的渲染结果可以复用；
+// 正文一变，key 就变了，不需要单独失效。容量按文章篇数留了余量。
+const RENDER_CACHE_MAX = 64
+const renderedMarkdown = new Map<string, string>()
+
 export function renderMarkdown(content: string): string {
-  return marked.parse(content) as string
+  const hit = renderedMarkdown.get(content)
+  if (hit !== undefined) {
+    renderedMarkdown.delete(content)
+    renderedMarkdown.set(content, hit)
+    return hit
+  }
+
+  const html = marked.parse(content) as string
+  if (renderedMarkdown.size >= RENDER_CACHE_MAX) {
+    const oldest = renderedMarkdown.keys().next().value
+    if (oldest !== undefined) renderedMarkdown.delete(oldest)
+  }
+  renderedMarkdown.set(content, html)
+  return html
 }
+

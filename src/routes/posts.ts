@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { getAllPosts, getPostBySlug, createPost, visiblePostSource } from '../lib/post-storage.js'
+import { getAllPosts, getPostBySlug, createPost, postDescription, visiblePostSource } from '../lib/post-storage.js'
 import { renderMarkdown } from '../lib/markdown.js'
 import { renderLayout } from '../views/layout.js'
 import { renderPostBody } from '../views/post.js'
@@ -16,6 +16,7 @@ async function servePost(c: any, slug: string) {
   const pageTitle = post.published ? post.title : `[DRAFT] ${post.title}`
   return c.html(renderLayout({
     title: pageTitle,
+    description: postDescription(post),
     content: renderPostBody({
       title: post.title,
       titleEn: post.titleEn,

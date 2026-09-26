@@ -8,6 +8,11 @@ describe('renderMarkdown', () => {
     expect(result).toContain('Hello')
   })
 
+  it('returns the same string for the same source', () => {
+    const source = '# Cached heading'
+    expect(renderMarkdown(source)).toBe(renderMarkdown(source))
+  })
+
   it('converts links', () => {
     const result = renderMarkdown('[example](https://example.com)')
     expect(result).toContain('<a href="https://example.com"')

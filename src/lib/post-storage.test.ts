@@ -1,5 +1,36 @@
 import { describe, it, expect } from 'vitest'
-import { validateMediaFile, mediaEmbedMarkdown } from './post-storage.js'
+import { validateMediaFile, mediaEmbedMarkdown, postDescription } from './post-storage.js'
+
+describe('postDescription', () => {
+  it('prefers the written description', () => {
+    expect(postDescription({ description: ' 手写摘要 ', content: '正文' })).toBe('手写摘要')
+  })
+
+  it('falls back to plain text from the body', () => {
+    const content = [
+      '<div align="center">',
+      '',
+      '![封面](./media/a.jpg)',
+      '',
+      '</div>',
+      '',
+      '## 标题',
+      '',
+      '这是**第一段**，有一个[链接](https://x.com)。',
+      '',
+      '```ts',
+      'const secret = 1',
+      '```',
+    ].join('\n')
+    expect(postDescription({ description: '', content })).toBe('标题 这是第一段，有一个链接。')
+  })
+
+  it('truncates long bodies', () => {
+    const result = postDescription({ content: '字'.repeat(200) })
+    expect(result).toHaveLength(121)
+    expect(result.endsWith('…')).toBe(true)
+  })
+})
 
 describe('validateMediaFile', () => {
   it('allows pdf by mime type', () => {

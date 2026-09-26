@@ -1,6 +1,7 @@
 import { readdir, readFile, writeFile, mkdir, rename, stat, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import { generateSlug } from './slug.js'
+import { createSingleFlightCache } from './single-flight.js'
 
 const POSTS_DIR = join(process.cwd(), 'src', 'posts')
 const UPLOADS_DIR = join(POSTS_DIR, '_uploads')
@@ -39,6 +40,24 @@ export function visiblePostSource(post: {
 }): PostSource | undefined {
   if (post.section === 'musings' || !post.sourceUrl || !post.sourceTitle) return undefined
   return { url: post.sourceUrl, title: post.sourceTitle }
+}
+
+const DESCRIPTION_MAX = 120
+
+// 分享卡片和搜索结果里的摘要。meta 里没填时，从正文里去掉代码、图片、标签和 Markdown 记号后截取。
+export function postDescription(post: { description?: string; content: string }): string {
+  const written = post.description?.trim()
+  if (written) return written
+  const text = post.content
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/^[\s#>*-]+/gm, '')
+    .replace(/[*_`~]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+  return text.length > DESCRIPTION_MAX ? text.slice(0, DESCRIPTION_MAX) + '…' : text
 }
 
 export function parseSource(url: unknown, title: unknown): PostSource | undefined {
@@ -151,64 +170,78 @@ async function postDirExists(slug: string): Promise<boolean> {
   }
 }
 
+// 公开页是读多写少。TTL 让洪峰里每 5 秒最多重新读一次盘，其余请求复用内存；
+// 直接改磁盘上的 markdown 时，最迟 5 秒能在开发服务器里看到。后台保存会立刻失效。
+const POST_READ_CACHE_TTL_MS = 5_000
+
+const listCache = createSingleFlightCache<PostListItem[]>({ ttlMs: POST_READ_CACHE_TTL_MS })
+const allPostsCache = createSingleFlightCache<Post[]>({ ttlMs: POST_READ_CACHE_TTL_MS })
+const postCache = createSingleFlightCache<Post | null>({
+  ttlMs: POST_READ_CACHE_TTL_MS,
+  // 不缓存 404。随机 slug 否则会把 Map 撑大，而热点文章仍然进缓存。
+  store: (post) => post !== null,
+})
+
+function invalidatePostReads(...slugs: string[]): void {
+  listCache.invalidate('all')
+  allPostsCache.invalidate('all')
+  for (const slug of slugs) postCache.invalidate(slug)
+}
+
+// 各篇并行读，读不出来的目录直接跳过，结果按时间倒序。
+async function loadEachPost<T extends { createdAt: Date }>(
+  load: (slug: string) => Promise<T>,
+): Promise<T[]> {
+  const entries = await readdir(POSTS_DIR, { withFileTypes: true })
+  const slugs = entries
+    .filter((entry) => entry.isDirectory() && !entry.name.startsWith('_'))
+    .map((entry) => entry.name)
+  const loaded: (T | null)[] = await Promise.all(slugs.map((slug) => load(slug).catch(() => null)))
+  return loaded
+    .filter((item): item is Awaited<T> => item !== null)
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+}
+
 export async function getAllPostListItems(
   options: { includeUnpublished?: boolean } = {},
 ): Promise<PostListItem[]> {
-  const entries = await readdir(POSTS_DIR, { withFileTypes: true })
-  const items: PostListItem[] = []
-
-  for (const entry of entries) {
-    if (!entry.isDirectory() || entry.name.startsWith('_')) continue
-    const slug = entry.name
-    try {
+  const items = await listCache.get('all', () =>
+    loadEachPost(async (slug) => {
       const metaRaw = await readFile(join(POSTS_DIR, slug, 'meta.json'), 'utf-8')
-      const meta = parseMeta(metaRaw, slug)
-      if (options.includeUnpublished || meta.published) {
-        items.push(postListItemFromDir(slug, meta))
-      }
-    } catch {
-      // Skip invalid post folders silently
-    }
-  }
-
-  items.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-  return items
+      return postListItemFromDir(slug, parseMeta(metaRaw, slug))
+    }),
+  )
+  return options.includeUnpublished ? items : items.filter((item) => item.published)
 }
 
 export async function getAllPosts(): Promise<Post[]> {
-  const entries = await readdir(POSTS_DIR, { withFileTypes: true })
-  const posts: Post[] = []
-
-  for (const entry of entries) {
-    if (!entry.isDirectory() || entry.name.startsWith('_')) continue
-    const slug = entry.name
-    try {
-      const metaRaw = await readFile(join(POSTS_DIR, slug, 'meta.json'), 'utf-8')
-      const meta = parseMeta(metaRaw, slug)
-      const content = await readFile(join(POSTS_DIR, slug, 'index.md'), 'utf-8')
-      posts.push(postFromDir(slug, meta, content))
-    } catch {
-      // Skip invalid post folders silently
-    }
-  }
-
-  posts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-  return posts
+  return allPostsCache.get('all', () =>
+    loadEachPost(async (slug) => {
+      const dir = join(POSTS_DIR, slug)
+      const [metaRaw, content] = await Promise.all([
+        readFile(join(dir, 'meta.json'), 'utf-8'),
+        readFile(join(dir, 'index.md'), 'utf-8'),
+      ])
+      return postFromDir(slug, parseMeta(metaRaw, slug), content)
+    }),
+  )
 }
 
 export async function getPostBySlug(slug: string): Promise<Post | null> {
+  return postCache.get(slug, () => loadPostBySlug(slug))
+}
+
+async function loadPostBySlug(slug: string): Promise<Post | null> {
   if (!(await postDirExists(slug))) return null
 
   try {
-    const metaRaw = await readFile(join(POSTS_DIR, slug, 'meta.json'), 'utf-8')
+    const dir = join(POSTS_DIR, slug)
+    const [metaRaw, content, contentEn] = await Promise.all([
+      readFile(join(dir, 'meta.json'), 'utf-8'),
+      readFile(join(dir, 'index.md'), 'utf-8'),
+      readFile(join(dir, 'index_en.md'), 'utf-8').catch(() => undefined),
+    ])
     const meta = parseMeta(metaRaw, slug)
-    const content = await readFile(join(POSTS_DIR, slug, 'index.md'), 'utf-8')
-    let contentEn: string | undefined
-    try {
-      contentEn = await readFile(join(POSTS_DIR, slug, 'index_en.md'), 'utf-8')
-    } catch {
-      contentEn = undefined
-    }
     return postFromDir(slug, meta, content, contentEn)
   } catch {
     return null
@@ -223,6 +256,7 @@ export async function createPost(
   section: PostSection = 'musings',
   source?: PostSource,
 ): Promise<Post> {
+  invalidatePostReads()
   const now = date ? new Date(date) : new Date()
   const slug = generateSlug(title, now)
   const dir = join(POSTS_DIR, slug)
@@ -241,6 +275,7 @@ export async function createPost(
   await writeFile(join(dir, 'meta.json'), JSON.stringify(meta, null, 4) + '\n', 'utf-8')
   await writeFile(join(dir, 'index.md'), content, 'utf-8')
 
+  invalidatePostReads(slug)
   return postFromDir(slug, meta, content)
 }
 
@@ -253,6 +288,7 @@ export async function updatePost(
   section?: PostSection,
   source?: PostSource,
 ): Promise<Post> {
+  invalidatePostReads(slug)
   const existing = await getPostBySlug(slug)
   if (!existing) throw new Error(`Post "${slug}" not found`)
 
@@ -304,6 +340,7 @@ export async function updatePost(
   await writeFile(join(dir, 'meta.json'), JSON.stringify(meta, null, 4) + '\n', 'utf-8')
   await writeFile(join(dir, 'index.md'), content, 'utf-8')
 
+  invalidatePostReads(slug, newSlug)
   return postFromDir(newSlug, meta, content)
 }
 
@@ -312,11 +349,13 @@ export async function saveTranslation(
   titleEn: string,
   contentEn: string,
 ): Promise<void> {
+  invalidatePostReads(slug)
   const dir = join(POSTS_DIR, slug)
   await writeFile(join(dir, 'index_en.md'), contentEn, 'utf-8')
   const meta = JSON.parse(await readFile(join(dir, 'meta.json'), 'utf-8')) as PostMeta
   meta.titleEn = titleEn
   await writeFile(join(dir, 'meta.json'), JSON.stringify(meta, null, 4) + '\n', 'utf-8')
+  invalidatePostReads(slug)
 }
 
 // ── Media helpers ──

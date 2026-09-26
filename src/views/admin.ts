@@ -56,6 +56,37 @@ function sourceFieldsScript() {
   </script>`
 }
 
+// 保存要等翻译和全站重建，可能几十秒。提示正在处理，并挡住重复提交，免得两次重建同时跑。
+// 不禁用按钮：submit 事件里禁用会让按钮上的 name/value（published）不随表单提交。
+function submitOnceScript() {
+  return html`<script>
+    (function () {
+      document.querySelectorAll('form[data-submit-once]').forEach(function (form) {
+        form.addEventListener('submit', function (e) {
+          if (form.dataset.submitting) {
+            e.preventDefault()
+            return
+          }
+          form.dataset.submitting = '1'
+          const btn = e.submitter
+          if (btn) {
+            btn.dataset.label = btn.textContent
+            btn.textContent = 'Saving… (translate + rebuild)'
+          }
+        })
+        // 从往返缓存（bfcache）恢复的页面保留着上次的状态，要复位，否则表单再也提交不了。
+        window.addEventListener('pageshow', function () {
+          delete form.dataset.submitting
+          form.querySelectorAll('[data-label]').forEach(function (btn) {
+            btn.textContent = btn.dataset.label
+            delete btn.dataset.label
+          })
+        })
+      })
+    })()
+  </script>`
+}
+
 interface PostItem {
   slug: string
   title: string
@@ -75,7 +106,7 @@ export function renderAdminPage(posts: PostItem[], error?: string) {
     ${error ? html`<p class="admin-media-error">${error}</p>` : ''}
 
     <h2>New Post</h2>
-    <form method="POST" action="/admin/posts" enctype="multipart/form-data">
+    <form method="POST" action="/admin/posts" enctype="multipart/form-data" data-submit-once>
       <input
         type="text"
         name="title"
@@ -113,6 +144,7 @@ export function renderAdminPage(posts: PostItem[], error?: string) {
       </div>
     </form>
     ${sourceFieldsScript()}
+    ${submitOnceScript()}
     <script>
       (function () {
         const input = document.querySelector('input[name="cover"]')
@@ -174,7 +206,7 @@ export function renderEditForm(
   const dateStr = post.createdAt.toISOString().split('T')[0]
   return html`<section class="admin">
     <h2>Edit</h2>
-    <form method="POST" action="/admin/edit/${post.slug}">
+    <form method="POST" action="/admin/edit/${post.slug}" data-submit-once>
       <input
         type="text"
         name="title"
@@ -207,6 +239,7 @@ export function renderEditForm(
       </div>
     </form>
     ${sourceFieldsScript()}
+    ${submitOnceScript()}
     ${renderMediaSection({ slug: post.slug }, mediaFiles, mediaError)}
     <script>
       (function () {

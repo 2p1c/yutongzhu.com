@@ -9,16 +9,20 @@ interface PostViewProps {
   source?: { url: string; title: string }
 }
 
+// 只在首次打开时跳到标题。带锚点、或读者已经动过滚动条时不再跳；返回上一页时交给浏览器恢复位置。
 const scrollToTitleScript = `(function () {
-  if (history.scrollRestoration) history.scrollRestoration = 'manual'
+  if (location.hash) return
+  var landed
   function go() {
     var el = document.querySelector('.post-title')
     if (!el) return
     window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY)
+    landed = window.scrollY
   }
   go()
-  window.addEventListener('DOMContentLoaded', go)
-  window.addEventListener('load', go)
+  window.addEventListener('DOMContentLoaded', function () {
+    if (window.scrollY === landed) go()
+  })
 })()`
 
 export function renderPostBody(props: PostViewProps) {
