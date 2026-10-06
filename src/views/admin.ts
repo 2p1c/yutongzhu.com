@@ -225,13 +225,22 @@ export function renderEditForm(
       />
       ${renderSectionSelect(post.section)}
       ${renderSourceFields({ url: post.sourceUrl, title: post.sourceTitle })}
-      <textarea
-        name="content"
-        placeholder="Markdown content..."
-        class="admin-textarea"
-        rows="25"
-        required
-      >${post.content}</textarea>
+      <div class="admin-editor">
+        <div class="admin-editor-switch">
+          <button type="button" class="admin-editor-tab is-active" data-pane="write">编写</button>
+          <button type="button" class="admin-editor-tab" data-pane="preview">预览</button>
+        </div>
+        <div class="admin-editor-panes">
+          <textarea
+            name="content"
+            placeholder="Markdown content..."
+            class="admin-textarea"
+            rows="25"
+            required
+          >${post.content}</textarea>
+          <div class="admin-preview post-content"></div>
+        </div>
+      </div>
       <div class="admin-actions">
         <button type="submit" name="published" value="false" class="admin-btn">Save as draft</button>
         <button type="submit" name="published" value="true" class="admin-btn">Publish</button>
@@ -302,6 +311,83 @@ export function renderEditForm(
 
         // 表单提交成功后清掉草稿
         form.addEventListener('submit', () => localStorage.removeItem(KEY))
+      })()
+    </script>
+    <script>
+      (function () {
+        const editor = document.querySelector('.admin-editor')
+        const form = document.querySelector('form[action^="/admin/edit/"]')
+        if (!editor || !form) return
+        const textarea = editor.querySelector('.admin-textarea')
+        const preview = editor.querySelector('.admin-preview')
+        const tabs = editor.querySelectorAll('.admin-editor-tab')
+        if (!textarea || !preview) return
+        let timer
+        let seq = 0
+        let syncing = false
+
+        function scrollRatio(el) {
+          const max = el.scrollHeight - el.clientHeight
+          if (max <= 0) return 0
+          return el.scrollTop / max
+        }
+
+        function setScrollRatio(el, ratio) {
+          const max = el.scrollHeight - el.clientHeight
+          if (max <= 0) return
+          syncing = true
+          el.scrollTop = max * ratio
+          syncing = false
+        }
+
+        function syncFrom(source, target) {
+          if (syncing) return
+          setScrollRatio(target, scrollRatio(source))
+        }
+
+        textarea.addEventListener('scroll', function () {
+          syncFrom(textarea, preview)
+        })
+        preview.addEventListener('scroll', function () {
+          syncFrom(preview, textarea)
+        })
+
+        function refresh() {
+          const current = ++seq
+          const fd = new FormData()
+          fd.append('content', textarea.value)
+          fetch(form.action + '/preview', { method: 'POST', body: fd })
+            .then(function (res) {
+              if (!res.ok) throw new Error('preview failed')
+              return res.text()
+            })
+            .then(function (html) {
+              if (current !== seq) return
+              const ratio = scrollRatio(textarea)
+              preview.innerHTML = html
+              setScrollRatio(preview, ratio)
+            })
+            .catch(function () {
+              if (current !== seq) return
+              preview.textContent = '预览失败'
+            })
+        }
+
+        textarea.addEventListener('input', function () {
+          clearTimeout(timer)
+          timer = setTimeout(refresh, 300)
+        })
+        tabs.forEach(function (tab) {
+          tab.addEventListener('click', function () {
+            const pane = tab.getAttribute('data-pane')
+            editor.classList.toggle('is-preview', pane === 'preview')
+            tabs.forEach(function (t) {
+              t.classList.toggle('is-active', t === tab)
+            })
+            if (pane === 'preview') refresh()
+          })
+        })
+        refresh()
       })()
     </script>
   </section>`

@@ -7,6 +7,7 @@ interface LayoutProps {
   title: string
   description?: string
   showTranslate?: boolean
+  wide?: boolean
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   content: any
 }
@@ -29,7 +30,7 @@ export function renderLayout(props: LayoutProps) {
     : ''}
   <link rel="stylesheet" href="/style.css">
 </head>
-<body>
+<body class="${props.wide ? 'layout-wide' : ''}">
   <header>
     <h1><a href="/" style="color: inherit; text-decoration: none;">{ Yutong Zhu }</a></h1>
     <span class="subtitle">developer • student • robot</span>

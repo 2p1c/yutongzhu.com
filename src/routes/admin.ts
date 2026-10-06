@@ -3,6 +3,7 @@ import { getAllPostListItems, getPostBySlug, createPost, updatePost, getMediaFil
 import { authGuard } from '../lib/auth.js'
 import { translateAndSave } from '../lib/model.js'
 import { buildSite } from '../lib/site-build.js'
+import { previewMarkdown } from '../lib/markdown.js'
 import { renderLayout } from '../views/layout.js'
 import { renderAdminPage, renderEditForm } from '../views/admin.js'
 
@@ -37,8 +38,18 @@ admin.get('/admin/edit/:slug', authGuard, async (c) => {
   return c.html(renderLayout({
     title: 'Edit — Admin',
     showTranslate: false,
+    wide: true,
     content: renderEditForm(post, mediaFiles, error),
   }))
+})
+
+admin.post('/admin/edit/:slug/preview', authGuard, async (c) => {
+  const slug = c.req.param('slug')!
+  const post = await getPostBySlug(slug)
+  if (!post) return c.notFound()
+  const body = await c.req.parseBody()
+  const content = typeof body.content === 'string' ? body.content : ''
+  return c.html(previewMarkdown(content, slug))
 })
 
 admin.post('/admin/edit/:slug', authGuard, async (c) => {

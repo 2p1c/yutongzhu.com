@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { renderMarkdown } from './markdown.js'
+import { previewMarkdown, renderMarkdown } from './markdown.js'
 
 describe('renderMarkdown', () => {
   it('converts headings', () => {
@@ -73,6 +73,28 @@ describe('renderMarkdown', () => {
     const result = renderMarkdown('A paragraph.')
     expect(result).toContain('<p>')
     expect(result).toContain('A paragraph.')
+  })
+
+  it('rewrites relative media paths for the edit preview', () => {
+    const slug = '2026-01-01-note'
+    const image = previewMarkdown('![alt](./media/a.png)', slug)
+    expect(image).toContain('src="/posts/2026-01-01-note/media/a.png"')
+
+    const video = previewMarkdown('<video controls src="./media/a.mp4"></video>', slug)
+    expect(video).toContain('src="/posts/2026-01-01-note/media/a.mp4"')
+
+    const link = previewMarkdown('[file](./media/a.pdf)', slug)
+    expect(link).toContain('href="/posts/2026-01-01-note/media/a.pdf"')
+  })
+
+  it('leaves code samples and absolute image paths unchanged in preview', () => {
+    const code = previewMarkdown('```\n./media/a.png\n```', 'note')
+    expect(code).toContain('./media/a.png')
+    expect(code).not.toContain('/posts/note/media/')
+
+    const absolute = previewMarkdown('![alt](/images/foo.png)', 'note')
+    expect(absolute).toContain('src="/images/foo.png"')
+    expect(absolute).not.toContain('/posts/note/media/')
   })
 
   it('passes through video and pdf html embeds', () => {

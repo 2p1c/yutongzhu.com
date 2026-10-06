@@ -91,3 +91,16 @@ export function renderMarkdown(content: string): string {
   return html
 }
 
+/** HTML for the edit-page preview. `./media/` is rewritten so files resolve on `/admin/edit/:slug`. */
+export function previewMarkdown(content: string, slug: string): string {
+  const base = `/posts/${slug}/media/`
+  const pairs = [
+    ['src="./media/', `src="${base}`],
+    ["src='./media/", `src='${base}`],
+    ['href="./media/', `href="${base}`],
+    ["href='./media/", `href='${base}`],
+  ]
+  // 草稿每次输入都不同，走缓存只会把已发布文章的渲染结果挤出去。
+  const html = marked.parse(content) as string
+  return pairs.reduce((out, [from, to]) => out.split(from).join(to), html)
+}
